@@ -1,43 +1,43 @@
 {
-  "title": "Clock-Works",
-  "description": "A tool for creating and tracking clocks on the fly",
-  "url": "https://github.com/BluSunrize/fvtt-clockworks",
-  "manifest": "https://raw.githubusercontent.com/BluSunrize/fvtt-clockworks/main/module.json",
-  "version": "1.0.0",
-  "esmodules": [
-    "modules/hooks.js"
-  ],
-  "styles": [
-    "styles/style.css"
-  ],
-  "id": "clock-works",
-  "authors": [
-    {
-      "name": "BluSunrize",
-      "flags": {}
+    "title": "Clock-Works",
+    "description": "A tool for creating and tracking clocks on the fly",
+    "url": "https://github.com/BluSunrize/fvtt-clockworks",
+    "manifest": "https://raw.githubusercontent.com/BluSunrize/fvtt-clockworks/main/module.json",
+    "version": "1.0.0",
+    "esmodules": [
+        "modules/hooks.js"
+    ],
+    "styles": [
+        "styles/style.css"
+    ],
+    "id": "clock-works",
+    "authors": [
+        {
+            "name": "BluSunrize",
+            "flags": {}
+        }
+    ],
+    "languages": [
+        {
+            "lang": "en",
+            "name": "English",
+            "path": "lang/en.json"
+        }
+    ],
+    "socket": true,
+    "relationships": {
+        "systems": [],
+        "requires": [
+            {
+                "id": "socketlib"
+            },
+            {
+                "id": "color-picker"
+            }
+        ]
+    },
+    "compatibility": {
+        "minimum": "0.10.0",
+        "verified": "0.10.303"
     }
-  ],
-  "languages": [
-      {
-          "lang": "en",
-          "name": "English",
-          "path": "lang/en.json"
-      }
-  ],
-  "socket": true,
-  "relationships": {
-    "systems": [],
-    "requires": [
-      {
-        "id": "socketlib"
-      },
-      {
-        "id": "color-picker"
-      }
-    ]
-  },
-  "compatibility": {
-    "minimum": "0.10.0",
-    "verified": "0.10.303"
-  }
 }
