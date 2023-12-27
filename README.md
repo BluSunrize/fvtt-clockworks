@@ -22,7 +22,7 @@ By rightclicking, you can access the contents menu to edit, duplicate or delete 
 
 When editing a clock, you can adjust its size, segment count and colors. You can also set back- and foreground images if you want filled spaces to display a different image than empty ones.
 
-![edit form image](img/demo_context.png)
+![edit form image](img/demo_edit.png)
 
 ## Attributions
 
