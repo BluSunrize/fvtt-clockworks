@@ -1,0 +1,50 @@
+<form data-clock-id="{{id}}">
+    <section class="clock-works-edit-form flexcol">
+        <div class="form-group" data-tooltip="clock-works.edit-form.fields.name-tooltip">
+            <label for="name">{{localize "clock-works.edit-form.fields.name"}}:</label>
+            <input type="text" id="name" name="name" data-dtype="String" value="{{name}}">
+        </div>
+        <div class="form-group" data-tooltip="clock-works.edit-form.fields.size-tooltip">
+            <label for="size">{{localize "clock-works.edit-form.fields.size"}}:</label>
+            <input type="text" id="size" name="size" data-dtype="Number" value="{{size}}">
+        </div>
+        <div class="form-group" data-tooltip="clock-works.edit-form.fields.filled-tooltip">
+            <label for="filled">{{localize "clock-works.edit-form.fields.filled"}}:</label>
+            <input type="text" id="filled" name="filled" data-dtype="Number" value="{{filled}}">
+        </div>
+        <div class="form-group" data-tooltip="clock-works.edit-form.fields.imagebg-tooltip">
+            <label for="backgroundImage">{{localize "clock-works.edit-form.fields.imagebg"}}:</label>
+            <div class="">
+                <input type="text" id="imagebg" name="imagebg" data-dtype="text" value="{{imagebg}}">
+                {{filePicker target="imagebg" type="image"}}
+            </div>
+        </div>
+        <div class="form-group" data-tooltip="clock-works.edit-form.fields.imagefg-tooltip">
+            <label for="backgroundImage">{{localize "clock-works.edit-form.fields.imagefg"}}:</label>
+            <div class="">
+                <input type="text" id="imagefg" name="imagefg" data-dtype="text" value="{{imagefg}}">
+                {{filePicker target="imagefg" type="image"}}
+            </div>
+        </div>
+        <div class="form-group" data-tooltip="clock-works.edit-form.fields.colorempty-tooltip">
+            <label for="colorempty">{{localize "clock-works.edit-form.fields.colorempty"}}:</label>
+            <input data-color-picker="{required: false, alphaChannel:true, format:'hexa'}"
+                value="{{colorempty}}" name="colorempty" id="colorempty">
+        </div>
+        <div class="form-group" data-tooltip="clock-works.edit-form.fields.colorfilled-tooltip">
+            <label for="colorfilled">{{localize "clock-works.edit-form.fields.colorfilled"}}:</label>
+            <input data-color-picker="{required: false, alphaChannel:true, format:'hexa'}"
+                value="{{colorfilled}}" name="colorfilled" id="colorfilled">
+        </div>
+        <div class="form-group" data-tooltip="clock-works.edit-form.fields.colorframe-tooltip">
+            <label for="colorframe">{{localize "clock-works.edit-form.fields.colorframe"}}:</label>
+            <input data-color-picker="{required: false, alphaChannel:true, format:'hexa'}"
+                value="{{colorframe}}" name="colorframe" id="colorframe">
+        </div>
+    </section>
+    <footer class="flexrow">
+        <button type="submit" name="submit">
+            <i class="fas fa-save"></i>{{localize "clock-works.edit-form.save"}}
+        </button>
+    </footer>
+</form>

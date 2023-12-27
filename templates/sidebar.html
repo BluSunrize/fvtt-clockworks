@@ -1,0 +1,41 @@
+<section class="tab sidebar-tab directory flexcol clocks-sidebar" id="clocks" data-tab="clocks">
+    <header class="directory-header">
+        <div class="header-actions action-buttons flexrow">
+            <button class="create-document">
+                <span class="fa-stack" style="font-size: 150%; width: 1.5em; height: 1.5em; line-height: 1.25em;">
+                    <i class="far fa-circle fa-stack-1x"></i>
+                    <i class="far fa-asterisk fa-stack-1x"></i>
+                </span>
+                {{localize "clock-works.sidebar.create"}}
+            </button>
+        </div>
+        <div class="header-search flexrow">
+            <i class="fas fa-search"></i>
+            <input type="search" name="search" value="" placeholder="Search Clocks" autocomplete="off">
+        </div>
+    </header>
+
+    <ol class="directory-list">
+        {{#each clocks}}
+        <li class="directory-item" data-clock-id="{{id}}">
+            <canvas width="512" height="512">
+            </canvas>
+            <div class="clock-details">
+                <h4 class="clock-name">
+                    <a>{{name}} - {{filled}} / {{size}}</a>
+                </h4>
+                <div class="clock-buttons">
+                    <button class="increment" data-tooltip="clock-works.sidebar.increment" {{#if (gte filled size)}} disabled {{/if}}>
+                        <i class="fas fa-plus-circle"></i>
+                    </button>
+                    <button class="decrement" data-tooltip="clock-works.sidebar.decrement" {{#if (lte filled 0)}} disabled {{/if}}>
+                        <i class="fas fa-minus-circle"></i>
+                    </button>
+                </div>
+            </div>
+        </li>
+        {{/each}}
+    </ol>
+
+    <footer class="directory-footer action-buttons"></footer>
+</section>

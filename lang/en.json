@@ -1,0 +1,35 @@
+{
+    "clock-works.clocks": "Clocks",
+    "clock-works.edit-form": {
+        "title": "Edit Clock",
+        "save": "Save and Close",
+        "default-name": "New Clock",
+        "fields": {
+            "name": "Name",
+            "name-tooltip": "Name / topic of the Clock",
+            "size": "Size",
+            "size-tooltip": "Total number of segments on the clock",
+            "filled": "Filled segments",
+            "filled-tooltip": "Numer of filled segments on the clock",
+            "imagebg": "Background image",
+            "imagebg-tooltip": "Background image of the clock",
+            "imagefg": "Foreground image",
+            "imagefg-tooltip": "Forgeground image of the clock",
+            "colorempty": "Empty color",
+            "colorempty-tooltip": "Color for empty segments on the clock",
+            "colorfilled": "Filled color",
+            "colorfilled-tooltip": "Color for filled segments on the clock",
+            "colorframe": "Frame color",
+            "colorframe-tooltip": "Color of the clock frame"
+        }
+    },
+    "clock-works.sidebar": {
+        "create": "Create Clock",
+        "edit": "Edit",
+        "duplicate": "Duplicate",
+        "delete": "Delete",
+        "postfix-copy": " (Copy)",
+        "increment": "Increment",
+        "decrement": "Decrement"
+    }
+}

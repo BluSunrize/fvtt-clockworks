@@ -1,0 +1,68 @@
+.clocks-sidebar {
+    li.directory-item {
+        display: flex;
+
+        canvas {
+            width: calc(var(--sidebar-item-height) * 2);
+            height: calc(var(--sidebar-item-height) * 2);
+        }
+
+        .clock-details {
+            width: calc(100% - var(--sidebar-item-height) * 2);
+
+            h4 {
+                margin-bottom: 0;
+            }
+
+            .clock-buttons {
+                display: flex;
+
+                button {
+                    width: calc(var(--sidebar-item-height)/2);
+                    height: calc(var(--sidebar-item-height)/2);
+                    text-align: center;
+                    line-height: calc(var(--sidebar-item-height)/2);
+                    margin-left: 5px;
+                    margin-right: 5px;
+
+                    i {
+                        margin: 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.clock-works-display.window-app {
+    background: unset;
+    box-shadow: unset;
+
+    .window-content {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        border-radius: 0 0 5px 5px;
+        display: block;
+    }
+
+    .window-header {
+        border-bottom: unset;
+        visibility: hidden;
+        overflow: visible;
+        text-shadow: 0px 0px 2px #00000040, 0px 0px 10px #000000;
+    }
+
+    &:hover>.window-header {
+        visibility: visible;
+        transition: visibility 0.2s ease-in;
+        transition-delay: 0.5s;
+    }
+
+    &:not(:hover)>.window-header {
+        visibility: hidden;
+        transition: visibility 0.2s ease-in;
+        transition-delay: 0.1s;
+    }
+}
