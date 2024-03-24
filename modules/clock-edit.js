@@ -98,7 +98,7 @@ export class ClockPermissionForm extends FormApplication {
     static get defaultOptions() {
         const defaults = super.defaultOptions;
         const overrides = {
-            width: '400px',
+            width: 400,
             id: 'clock-works-permission-form',
             template: 'templates/apps/ownership.html',
         };

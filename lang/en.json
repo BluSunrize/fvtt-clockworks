@@ -22,7 +22,7 @@
             "colorframe": "Frame color",
             "colorframe-tooltip": "Color of the clock frame"
         },
-        "permission-hint": "Configure access to this specific Clock, allowing each User to be assigned a different level of visibility."
+        "permission-hint": "Configure access to this specific Clock, allowing each User to be assigned a different level of visibility. \"Limited\" means the user may see the clock, \"Observer\" allows use of the increase and decrease buttons, \"Owner\" allows editing the clocks properties."
     },
     "clock-works.sidebar": {
         "create": "Create Clock",
