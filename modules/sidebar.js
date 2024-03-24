@@ -278,8 +278,7 @@ export class ClocksSidebarTab extends SidebarTab {
     /** @inheritDoc */
     async _render(force, options) {
         const ret = await super._render(force, options);
-        // $(this._element).find('li').each(renderClockImage);
+        $(this._element).find('li.clock').each(renderClockImage);
         return ret;
     }
-
 }
