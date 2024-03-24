@@ -104,21 +104,17 @@ export class ClocksSidebarTab extends SidebarTab {
         });
         setDepth(nodes, 1)
 
-        console.log(nodes);
+        // Create root node
         const tree = createNode(true, null, 0);
         tree.children = nodes.sort(sortM);
-        console.log(tree);
-
 
         // Return data to the sidebar
-        const data = foundry.utils.mergeObject(context, {
+        return foundry.utils.mergeObject(context, {
             root: "templates/sidebar",
             tree: tree,
             canCreateEntry: game.user.isGM,
             canCreateFolder: game.user.isGM,
         });
-        console.log("sidebar data", data);
-        return data;
     }
 
 
@@ -223,8 +219,6 @@ export class ClocksSidebarTab extends SidebarTab {
                     const clockIDs = Object.values(getAllClocks())
                         .filter(clock => subtreeIDs.includes(clock.folder))
                         .map(clock => clock.id);
-                    console.log("Delete all:", subtreeIDs, clockIDs);
-
                     Dialog.confirm({
                         title: `${game.i18n.localize("FOLDER.Delete")} ${folder.name}`,
                         content: `<h4>${game.i18n.localize("AreYouSure")}</h4><p>${game.i18n.localize("FOLDER.DeleteWarning")}</p>`,
