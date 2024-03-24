@@ -21,7 +21,8 @@
             "colorfilled-tooltip": "Color for filled segments on the clock",
             "colorframe": "Frame color",
             "colorframe-tooltip": "Color of the clock frame"
-        }
+        },
+        "permission-hint": "Configure access to this specific Clock, allowing each User to be assigned a different level of visibility."
     },
     "clock-works.sidebar": {
         "create": "Create Clock",

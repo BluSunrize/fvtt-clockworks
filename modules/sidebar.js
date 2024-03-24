@@ -1,4 +1,4 @@
-import { ClockEditForm, defaultClockValues } from './clock-edit.js';
+import { ClockEditForm, defaultClockValues, checkClockPermission, ClockPermissionForm } from './clock-edit.js';
 import { ClockDisplay, renderClockImage } from './clock-display.js';
 import { deleteClock, generateClockId, getAllClocks, getClock, setClock } from './settings.js';
 
@@ -44,8 +44,8 @@ export class ClocksSidebarTab extends SidebarTab {
     async getData(options = {}) {
         const context = await super.getData(options);
 
-        // Filter packs for visibility
-        const clockList = Object.values(getAllClocks());
+        // Filter clocks for visibility
+        const clockList = Object.values(getAllClocks()).filter(clock => checkClockPermission(clock, CONST.DOCUMENT_OWNERSHIP_LEVELS.LIMITED));
 
         // Return data to the sidebar
         return foundry.utils.mergeObject(context, {
@@ -61,13 +61,15 @@ export class ClocksSidebarTab extends SidebarTab {
         // Adding a new clock
         html.find('.create-document').click(async evt => {
             const newClock = defaultClockValues();
+            // Set owner of the clock
+            newClock.ownership[game.user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
             await setClock(newClock.id, newClock);
             ClockEditForm.open(newClock.id);
         });
 
         // Editing an existing clock
         html.find('li.directory-item a').click(evt => {
-            const display =  new ClockDisplay($(evt.target).parents('li').data('clockId'));
+            const display = new ClockDisplay($(evt.target).parents('li').data('clockId'));
             display.render(true);
         });
 
@@ -92,8 +94,18 @@ export class ClocksSidebarTab extends SidebarTab {
     _getEntryContextOptions() {
         return [
             {
+                name: "OWNERSHIP.Configure",
+                icon: '<i class="fas fa-lock"></i>',
+                condition: () => game.user.isGM,
+                callback: li => {
+                    const clockId = li.data('clockId');
+                    return new ClockPermissionForm(clockId).render(true);
+                }
+            },
+            {
                 name: "clock-works.sidebar.edit",
                 icon: '<i class="fas fa-edit"></i>',
+                condition: li => checkClockPermission(li.data('clockId'), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
                 callback: li => {
                     const clockId = li.data('clockId');
                     return ClockEditForm.open(clockId);
@@ -102,6 +114,7 @@ export class ClocksSidebarTab extends SidebarTab {
             {
                 name: "clock-works.sidebar.duplicate",
                 icon: '<i class="fas fa-copy"></i>',
+                condition: li => checkClockPermission(li.data('clockId'), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
                 callback: li => {
                     const clockId = li.data('clockId');
                     const original = getClock(clockId);
@@ -116,6 +129,7 @@ export class ClocksSidebarTab extends SidebarTab {
             {
                 name: "clock-works.sidebar.delete",
                 icon: '<i class="fas fa-trash"></i>',
+                condition: li => checkClockPermission(li.data('clockId'), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
                 callback: li => {
                     const clockId = li.data('clockId');
                     return deleteClock(clockId);
