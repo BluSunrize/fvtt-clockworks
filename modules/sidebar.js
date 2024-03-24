@@ -44,8 +44,11 @@ export class ClocksSidebarTab extends SidebarTab {
     async getData(options = {}) {
         const context = await super.getData(options);
 
-        // Filter clocks for visibility
+        // Filter clocks for visibility, "Limited" allows viewing them, "Observer" allows pressing the buttons
         const clockList = Object.values(getAllClocks()).filter(clock => checkClockPermission(clock, CONST.DOCUMENT_OWNERSHIP_LEVELS.LIMITED));
+        clockList.forEach(clock => {
+            clock.showButtons = checkClockPermission(clock, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER);
+        });
 
         // Return data to the sidebar
         return foundry.utils.mergeObject(context, {
