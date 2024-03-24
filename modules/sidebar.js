@@ -1,6 +1,6 @@
 import { ClockEditForm, defaultClockValues, checkClockPermission, ClockPermissionForm } from './clock-edit.js';
 import { ClockDisplay, renderClockImage } from './clock-display.js';
-import { deleteClock, generateClockId, getAllClocks, getClock, setClock } from './settings.js';
+import { deleteClock, generateClockId, getAllClocks, getClock, setClock, shockClockToAll } from './settings.js';
 
 export class ClocksSidebarTab extends SidebarTab {
     constructor(options = {}) {
@@ -103,6 +103,15 @@ export class ClocksSidebarTab extends SidebarTab {
                 callback: li => {
                     const clockId = li.data('clockId');
                     return new ClockPermissionForm(clockId).render(true);
+                }
+            },
+            {
+                name: "clock-works.sidebar.show",
+                icon: '<i class="fas fa-eye"></i>',
+                condition: () => game.user.isGM,
+                callback: li => {
+                    const clockId = li.data('clockId');
+                    return shockClockToAll(clockId);
                 }
             },
             {

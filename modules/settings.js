@@ -7,6 +7,7 @@ Hooks.once("socketlib.ready", () => {
 	socket.register('setClock', setClock);
     socket.register('deleteClock', deleteClock);
     socket.register('updateRender', updateRender);
+    socket.register('showClock', showClock);
 });
 
 export function generateClockId() {
@@ -45,6 +46,12 @@ export async function deleteClock(clockId) {
     return await socket.executeForEveryone('updateRender');
 }
 
+export async function shockClockToAll(clockId) {
+    if (game.user.isGM)
+        return await socket.executeForOthers('showClock', clockId);
+    return Promise.resolve();
+}
+
 function updateRender() {
     // re-render sidebar and any opened clock displays
     ui.sidebar.tabs.clocks.render();
@@ -52,4 +59,13 @@ function updateRender() {
         if(app instanceof ClockDisplay)
             app.render();
     });
+}
+
+function showClock(clockId) {
+    // if window exists already, ignore
+    if(Object.values(ui.windows).find(app => app instanceof ClockDisplay && app.id == clockId))
+        return;
+    // show clock to all players
+    const display = new ClockDisplay(clockId);
+    display.render(true);
 }

@@ -26,6 +26,7 @@
     },
     "clock-works.sidebar": {
         "create": "Create Clock",
+        "show": "Show to Players",
         "edit": "Edit",
         "duplicate": "Duplicate",
         "delete": "Delete",
