@@ -1,6 +1,6 @@
 import { ClockEditForm, defaultClockValues, checkClockPermission, ClockPermissionForm } from './clock-edit.js';
 import { ClockDisplay, renderClockImage } from './clock-display.js';
-import { deleteClock, generateClockId, getAllClocks, getClock, setClock, shockClockToAll, getAllFolders, getFolder } from './settings.js';
+import { deleteClock, generateClockId, getAllClocks, getClock, setClock, shockClockToAll, getAllFolders, setFolder, deleteFolder } from './settings.js';
 import { FolderForm } from './folders.js';
 
 export class ClocksSidebarTab extends SidebarTab {
@@ -78,12 +78,18 @@ export class ClocksSidebarTab extends SidebarTab {
         // Get dictionary of folders
         const folders = this._getFolderStructure();
 
+        const sortA = (elem1, elem2) => elem1.name?.localeCompare(elem2.name);
+        const sortM = (elem1, elem2) => elem1.sort - elem2.sort;
+
         // build tree structure
         const createNode = (root, folder, depth) => {
+            const sorter = folder?.sorting === 'a' ? sortA : sortM;
             return {
                 root, folder, depth, visible: false,
-                children: folder?.children?.map(c => createNode(false, c, -1)) ?? [],
-                entries: clockList.filter(clock => folder ? folder.id === clock.folder : !clock.folder)
+                name: folder?.name ?? '',
+                sort: folder?.sort ?? 0,
+                children: (folder?.children?.map(c => createNode(false, c, -1)) ?? []).sort(sorter),
+                entries: clockList.filter(clock => folder ? folder.id === clock.folder : !clock.folder).sort(sorter),
             };
         };
         const nodes = folders
@@ -100,7 +106,7 @@ export class ClocksSidebarTab extends SidebarTab {
 
         console.log(nodes);
         const tree = createNode(true, null, 0);
-        tree.children = nodes;
+        tree.children = nodes.sort(sortM);
         console.log(tree);
 
 
@@ -122,6 +128,7 @@ export class ClocksSidebarTab extends SidebarTab {
 
         // Adding a new clock
         html.find('.create-clock').click(async evt => {
+            evt.stopPropagation();
             const newClock = defaultClockValues();
             // Set owner of the clock
             newClock.ownership[game.user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
@@ -135,9 +142,9 @@ export class ClocksSidebarTab extends SidebarTab {
 
         // Adding a new folder
         html.find('.create-folder').click(async evt => {
+            evt.stopPropagation();
             const parentFolderId = $(evt.target).parents('li.folder').first().data('folderId');
             new FolderForm(null, parentFolderId).render(true);
-            evt.stopPropagation();
         });
 
         // Handle folder expansion
@@ -175,6 +182,21 @@ export class ClocksSidebarTab extends SidebarTab {
         }
         html.find('.increment').click(evt => changeClock(evt, +1));
         html.find('.decrement').click(evt => changeClock(evt, -1));
+
+        // Drag + drop handling
+        const dragDrop = new DragDrop({
+            dragSelector: '.directory-item',
+            dropSelector: '.directory-list',
+            permissions: {
+                dragstart: this._canDragStart.bind(this),
+                drop: this._canDragDrop.bind(this)
+            },
+            callbacks: {
+                dragstart: this._onDragStart.bind(this),
+                drop: this._onDragDrop.bind(this)
+            }
+        });
+        dragDrop.bind(html[0]);
 
 
         // Context menu
@@ -274,6 +296,139 @@ export class ClocksSidebarTab extends SidebarTab {
         ];
     }
 
+    _canDragStart(selector) {
+        return true;
+    }
+
+    _canDragDrop(selector) {
+        return true;
+    }
+
+    _onDragStart(event) {
+        if (ui.context) ui.context.close({ animate: false });
+        const li = event.currentTarget.closest('.directory-item');
+        const isFolder = li.classList.contains('folder');
+        const dragData = isFolder ? { type: 'Folder', id: li.dataset.folderId } : { type: 'Clock', id: li.dataset.clockId };
+        event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+    }
+
+    _onDragDrop(event) {
+        const data = TextEditor.getDragEventData(event);
+        if (!data.type) return;
+        const target = event.target.closest('.directory-item') || null;
+        if (data.type == 'Folder')
+            return this._handleDroppedFolder(target, data);
+        else
+            return this._handleDroppedEntry(target, data);
+    }
+
+    async _handleDroppedFolder(target, data) {
+        const allFolders = this._getFolderStructure();
+        const folder = allFolders.find(f => f.id === data.id);
+        if (!folder)
+            return;
+
+        // Determine the closest Folder
+        const closestFolder = target ? target.closest('.folder') : null;
+        if (closestFolder)
+            closestFolder.classList.remove('droptarget');
+        let closestFolderId = closestFolder ? closestFolder.dataset.folderId : null;
+
+        // Sort into another Folder
+        const sortData = { sortKey: 'sort', sortBefore: true };
+        const isRelative = target && target.dataset.folderId;
+        if (isRelative) {
+            const targetFolder = allFolders.find(f => f.id === target.dataset.folderId);
+            // Sort relative to a collapsed Folder
+            if (target.classList.contains('collapsed')) {
+                sortData.target = targetFolder;
+                sortData.parentId = targetFolder.folder;
+            }
+            // Drop into an expanded Folder
+            else {
+                sortData.target = null;
+                sortData.parentId = targetFolder.id;
+            }
+        }
+        // Sort relative to existing Folder contents
+        else {
+            sortData.parentId = closestFolderId;
+            sortData.target = closestFolder && closestFolder.classList.contains('collapsed') ? closestFolder : null;
+        }
+
+        if (sortData.parentId) {
+            // Prevent assigning a folder as its own parent.
+            if (sortData.parentId === data.id)
+                return;
+            // Prevent creating a loop
+            if (this._getFolderSubtree(folder).map(f => f.id).includes(sortData.parentId))
+                return;
+        } else
+            sortData.parentId = '';
+
+        // Determine siblings & get new sorting
+        sortData.siblings = allFolders.filter(sibling => sibling.folder === sortData.parentId && sibling.id !== folder.id);
+        const sorting = SortingHelpers.performIntegerSort(folder, sortData);
+
+        // Prepare updates
+        let updateData = { folder: sortData.parentId };
+        const updates = sorting.map(s => {
+            const update = foundry.utils.mergeObject(updateData, s.update, { inplace: false });
+            update.id = s.target.id;
+            return update;
+        });
+
+        // Perform updates
+        const folderList = await getAllFolders();
+        return Promise.all(updates.map(
+            update => setFolder(update.id, foundry.utils.mergeObject(folderList[update.id], update))
+        ));
+    }
+
+    async _handleDroppedEntry(target, data) {
+        const entry = getClock(data.id);
+        if (!entry)
+            return;
+
+        // Determine the closest Folder
+        const closestFolder = target ? target.closest('.folder') : null;
+        if (closestFolder)
+            closestFolder.classList.remove('droptarget');
+        let folderId = closestFolder ? closestFolder.dataset.folderId : null;
+
+        // Sort relative to another clock
+        const sortData = { sortKey: 'sort' };
+        const isRelative = target && target.dataset.clockId;
+        if (isRelative) {
+            // Don't drop on yourself
+            if (entry.id === target.dataset.clockId)
+                return;
+            const targetClock = getClock(target.dataset.clockId);
+            sortData.target = targetClock;
+            folderId = targetClock?.folder;
+        }
+        // Sort within the closest Folder
+        else
+            sortData.target = null;
+
+        // Determine siblings & get new sorting
+        sortData.siblings = Object.values(getAllClocks()).filter(clock => clock.folder === folderId && clock.id !== entry.id);
+        const sorting = SortingHelpers.performIntegerSort(entry, sortData);
+
+        // Prepare updates
+        let updateData = { folder: folderId || null };
+        const updates = sorting.map(s => {
+            const update = foundry.utils.mergeObject(updateData, s.update, { inplace: false });
+            update.id = s.target.id;
+            return update;
+        });
+
+        // Perform updates
+        const allClocks = await getAllClocks();
+        return Promise.all(updates.map(
+            update => setClock(update.id, foundry.utils.mergeObject(allClocks[update.id], update))
+        ));
+    }
 
     /** @inheritDoc */
     async _render(force, options) {
