@@ -24,7 +24,13 @@
         },
         "permission-hint": "Configure access to this specific Clock, allowing each User to be assigned a different level of visibility. \"Limited\" means the user may see the clock, \"Observer\" allows use of the increase and decrease buttons, \"Owner\" allows editing the clocks properties."
     },
+    "clock-works.folders": {
+        "default-name": "New Folder"
+    },
     "clock-works.sidebar": {
+        "create-folder": "Create Folder",
+        "edit-folder": "Edit Folder",
+        "delete-folder": "Delete Folder & Contents",
         "create": "Create Clock",
         "show": "Show to Players",
         "edit": "Edit",
