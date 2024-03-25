@@ -1,4 +1,4 @@
-import { generateClockId, getAllClocks, getClock, setClock } from "./settings.js";
+import { generateClockId, getAllClocks, getClock, setClock } from './settings.js';
 
 export class ClockEditForm extends FormApplication {
     constructor(clockId) {
@@ -72,8 +72,8 @@ export function defaultClockValues() {
         colorempty: '#808080',
         colorfilled: '#00ff22',
         colorframe: '#444',
-        imagebg: "",
-        imagefg: "",
+        imagebg: '',
+        imagefg: '',
         ownership: {
             default: 0
         }

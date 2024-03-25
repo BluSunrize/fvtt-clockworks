@@ -1,9 +1,9 @@
-import { ClockDisplay } from "./clock-display.js";
+import { ClockDisplay } from './clock-display.js';
 
 let socket;
 
-Hooks.once("socketlib.ready", () => {
-	socket = socketlib.registerModule("clock-works");
+Hooks.once('socketlib.ready', () => {
+	socket = socketlib.registerModule('clock-works');
 	socket.register('setClock', setClock);
     socket.register('deleteClock', deleteClock);
     socket.register('updateRender', updateRender);

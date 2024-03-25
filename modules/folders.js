@@ -1,4 +1,4 @@
-import { generateClockId, getAllFolders, getFolder, setFolder } from "./settings.js";
+import { generateClockId, getAllFolders, getFolder, setFolder } from './settings.js';
 
 export class FolderForm extends FormApplication {
     constructor(folderId, parentId) {
@@ -29,11 +29,11 @@ export class FolderForm extends FormApplication {
         const folder = await this._getFolder();
         return {
             folder: folder,
-            name: this.folderId ? folder.name : "",
+            name: this.folderId ? folder.name : '',
             newName: game.i18n.localize('clock-works.folders.default-name'),
             safeColor: folder.color,
-            sortingModes: { a: "FOLDER.SortAlphabetical", m: "FOLDER.SortManual" },
-            submitText: game.i18n.localize(this.folderId ? "FOLDER.Update" : "FOLDER.Create")
+            sortingModes: { a: 'FOLDER.SortAlphabetical', m: 'FOLDER.SortManual' },
+            submitText: game.i18n.localize(this.folderId ? 'FOLDER.Update' : 'FOLDER.Create')
         };
     }
 

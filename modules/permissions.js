@@ -1,12 +1,12 @@
-import { getFolderStructure, getFolderSubtree } from "./folders.js";
-import { getAllClocks, getClock, getFolder, setClock, setFolder } from "./settings.js";
+import { getFolderStructure, getFolderSubtree } from './folders.js';
+import { getAllClocks, getClock, getFolder, setClock, setFolder } from './settings.js';
 
 export function checkClockPermission(clock, permission, user = game.user) {
-    const clockData = (typeof clock === "string") ? getClock(clock) : clock;
+    const clockData = (typeof clock === 'string') ? getClock(clock) : clock;
     const perms = CONST.DOCUMENT_OWNERSHIP_LEVELS;
     const ownership = clockData.ownership ?? { default: 0 };
     const level = user.isGM ? perms.OWNER : ownership[user.id] || ownership.default;
-    const target = (typeof permission === "string") ? (perms[permission] ?? perms.OWNER) : permission;
+    const target = (typeof permission === 'string') ? (perms[permission] ?? perms.OWNER) : permission;
     return level >= target;
 }
 

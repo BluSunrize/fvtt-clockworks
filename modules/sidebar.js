@@ -15,10 +15,10 @@ export class ClocksSidebarTab extends SidebarTab {
     /** @override */
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
-            id: "clocks",
-            template: "/modules/clock-works/templates/sidebar.html",
-            title: "clock-works.clocks",
-            scrollY: [".directory-list"],
+            id: 'clocks',
+            template: '/modules/clock-works/templates/sidebar.html',
+            title: 'clock-works.clocks',
+            scrollY: ['.directory-list'],
         });
     }
 
@@ -102,10 +102,10 @@ export class ClocksSidebarTab extends SidebarTab {
 
         // Return data to the sidebar
         return foundry.utils.mergeObject(context, {
-            root: "templates/sidebar",
+            root: 'templates/sidebar',
             tree: tree,
-            sortIcon: toplevelSort === "a" ? "fa-arrow-down-a-z" : "fa-arrow-down-short-wide",
-            sortTooltip: toplevelSort === "a" ? "SIDEBAR.SortModeAlpha" : "SIDEBAR.SortModeManual",
+            sortIcon: toplevelSort === 'a' ? 'fa-arrow-down-a-z' : 'fa-arrow-down-short-wide',
+            sortTooltip: toplevelSort === 'a' ? 'SIDEBAR.SortModeAlpha' : 'SIDEBAR.SortModeManual',
             canCreateEntry: game.user.isGM,
             canCreateFolder: game.user.isGM,
         });
@@ -138,18 +138,18 @@ export class ClocksSidebarTab extends SidebarTab {
         });
 
         // Handle folder expansion
-        html.on("click", ".folder-header", evt => {
+        html.on('click', '.folder-header', evt => {
             let folder = $(evt.currentTarget.parentElement);
-            let collapsed = folder.hasClass("collapsed");
+            let collapsed = folder.hasClass('collapsed');
             const folderId = folder.data('folderId');
             this._expandedFolders[folderId] = collapsed;
             // Expand
             if (collapsed)
-                folder.removeClass("collapsed");
+                folder.removeClass('collapsed');
             // Collapse
             else {
-                folder.addClass("collapsed");
-                const subs = folder.find(".folder").addClass("collapsed");
+                folder.addClass('collapsed');
+                const subs = folder.find('.folder').addClass('collapsed');
                 subs.each((i, f) => this._expandedFolders[folderId] = false);
             }
             if (this.popOut)
@@ -191,15 +191,15 @@ export class ClocksSidebarTab extends SidebarTab {
         dragDrop.bind(html[0]);
 
         // Changing toplevel sorting
-        html.on("click", ".header-control.toggle-sort", evt => {
+        html.on('click', '.header-control.toggle-sort', evt => {
             const toplevelSort = game.settings.get('fvtt-clock-works', 'toplevelSort');
             game.settings.set('fvtt-clock-works', 'toplevelSort', toplevelSort === 'a' ? 'm' : 'a');
             this.render();
         });
 
         // Handle collapsing of folders
-        html.on("click", ".header-control.collapse-all", evt => {
-            html.find("li.folder").addClass("collapsed");
+        html.on('click', '.header-control.collapse-all', evt => {
+            html.find('li.folder').addClass('collapsed');
             Object.keys(this._expandedFolders).forEach(key => this._expandedFolders[key] = false);
             if (this.popOut)
                 this.setPosition();
@@ -213,13 +213,13 @@ export class ClocksSidebarTab extends SidebarTab {
             const folderIds = new Set();
 
             if (query) {
-                const regex = new RegExp(RegExp.escape(query), "i");
+                const regex = new RegExp(RegExp.escape(query), 'i');
                 const allFolders = getFolderStructure();
                 const allClocks = Object.values(await getAllClocks());
 
                 const includeFolder = (folder) => {
                     if (!folder) return;
-                    if (typeof folder === "string") folder = allFolders.get(folder);
+                    if (typeof folder === 'string') folder = allFolders.get(folder);
                     if (!folder) return;
                     folderIds.add(folder.id);
                     if (folder.folder)
@@ -242,34 +242,34 @@ export class ClocksSidebarTab extends SidebarTab {
 
             // Hide / show entries in the list
             html.find('li').not('.hidden').each((_, el) => {
-                if (el.classList.contains("folder")) {
+                if (el.classList.contains('folder')) {
                     let match = query && folderIds.has(el.dataset.folderId);
-                    el.style.display = (!query || match) ? "flex" : "none";
+                    el.style.display = (!query || match) ? 'flex' : 'none';
                     if (query && match)
-                        el.classList.remove("collapsed");
+                        el.classList.remove('collapsed');
                     else
-                        el.classList.toggle("collapsed", !this._expandedFolders[el.dataset.folderId]);
+                        el.classList.toggle('collapsed', !this._expandedFolders[el.dataset.folderId]);
                 }
                 else
-                    el.style.display = (!query || entryIds.has(el.dataset.clockId)) ? "flex" : "none";
+                    el.style.display = (!query || entryIds.has(el.dataset.clockId)) ? 'flex' : 'none';
             });
         });
 
         // Context menu
-        ContextMenu.create(this, html, ".directory-item.folder .folder-header", this._getFolderContextOptions(), { hookName: "FolderContext" });
-        ContextMenu.create(this, html, ".directory-item.clock", this._getEntryContextOptions());
+        ContextMenu.create(this, html, '.directory-item.folder .folder-header', this._getFolderContextOptions(), { hookName: 'FolderContext' });
+        ContextMenu.create(this, html, '.directory-item.clock', this._getEntryContextOptions());
     }
 
     _getFolderContextOptions() {
         return [
             {
-                name: "clock-works.sidebar.edit-folder",
+                name: 'clock-works.sidebar.edit-folder',
                 icon: '<i class="fas fa-edit"></i>',
                 condition: () => game.user.isGM,
                 callback: header => new FolderForm(header.closest('li').data('folderId')).render(true),
             },
             {
-                name: "OWNERSHIP.Configure",
+                name: 'OWNERSHIP.Configure',
                 icon: '<i class="fas fa-lock"></i>',
                 condition: () => game.user.isGM,
                 callback: header => {
@@ -277,7 +277,7 @@ export class ClocksSidebarTab extends SidebarTab {
                 }
             },
             {
-                name: "clock-works.sidebar.delete-folder",
+                name: 'clock-works.sidebar.delete-folder',
                 icon: '<i class="fas fa-dumpster"></i>',
                 condition: () => game.user.isGM,
                 callback: header => {
@@ -288,8 +288,8 @@ export class ClocksSidebarTab extends SidebarTab {
                         .filter(clock => subtreeIDs.includes(clock.folder))
                         .map(clock => clock.id);
                     Dialog.confirm({
-                        title: `${game.i18n.localize("FOLDER.Delete")} ${folder.name}`,
-                        content: `<h4>${game.i18n.localize("AreYouSure")}</h4><p>${game.i18n.localize("FOLDER.DeleteWarning")}</p>`,
+                        title: `${game.i18n.localize('FOLDER.Delete')} ${folder.name}`,
+                        content: `<h4>${game.i18n.localize('AreYouSure')}</h4><p>${game.i18n.localize('FOLDER.DeleteWarning')}</p>`,
                         yes: () => Promise.all(
                             ...subtreeIDs.map(folderId => deleteFolder(folderId)),
                             ...clockIDs.map(clockId => deleteClock(clockId))
@@ -305,7 +305,7 @@ export class ClocksSidebarTab extends SidebarTab {
     _getEntryContextOptions() {
         return [
             {
-                name: "clock-works.sidebar.show",
+                name: 'clock-works.sidebar.show',
                 icon: '<i class="fas fa-eye"></i>',
                 condition: () => game.user.isGM,
                 callback: li => {
@@ -314,7 +314,7 @@ export class ClocksSidebarTab extends SidebarTab {
                 }
             },
             {
-                name: "clock-works.sidebar.edit",
+                name: 'clock-works.sidebar.edit',
                 icon: '<i class="fas fa-edit"></i>',
                 condition: li => checkClockPermission(li.data('clockId'), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
                 callback: li => {
@@ -323,7 +323,7 @@ export class ClocksSidebarTab extends SidebarTab {
                 }
             },
             {
-                name: "OWNERSHIP.Configure",
+                name: 'OWNERSHIP.Configure',
                 icon: '<i class="fas fa-lock"></i>',
                 condition: () => game.user.isGM,
                 callback: li => {
@@ -332,7 +332,7 @@ export class ClocksSidebarTab extends SidebarTab {
                 }
             },
             {
-                name: "clock-works.sidebar.duplicate",
+                name: 'clock-works.sidebar.duplicate',
                 icon: '<i class="fas fa-copy"></i>',
                 condition: li => checkClockPermission(li.data('clockId'), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
                 callback: li => {
@@ -347,7 +347,7 @@ export class ClocksSidebarTab extends SidebarTab {
                 }
             },
             {
-                name: "clock-works.sidebar.delete",
+                name: 'clock-works.sidebar.delete',
                 icon: '<i class="fas fa-trash"></i>',
                 condition: li => checkClockPermission(li.data('clockId'), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
                 callback: li => {
