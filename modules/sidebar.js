@@ -1,7 +1,8 @@
-import { ClockEditForm, defaultClockValues, checkClockPermission, ClockPermissionForm } from './clock-edit.js';
+import { ClockEditForm, defaultClockValues } from './clock-edit.js';
 import { ClockDisplay, renderClockImage } from './clock-display.js';
 import { deleteClock, generateClockId, getAllClocks, getClock, setClock, shockClockToAll, getAllFolders, setFolder, deleteFolder } from './settings.js';
 import { FolderForm } from './folders.js';
+import { ClockPermissionForm, checkClockPermission } from './permissions.js';
 
 export class ClocksSidebarTab extends SidebarTab {
     constructor(options = {}) {
