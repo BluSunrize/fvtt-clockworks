@@ -53,12 +53,18 @@ export class ClocksSidebarTab extends SidebarTab {
         clockList.forEach(clock => {
             clock.showButtons = checkClockPermission(clock, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER);
         });
+        // Get list of folders that clocks are contained in
+        const clockFolders = clockList.map(clock => clock.folder);
+        const folderVisible = f => getFolderSubtree(f).some(sub => clockFolders.includes(sub.id));
 
-        // Get dictionary of folders
-        const folders = getFolderStructure();
+        // Get list of folders, filtered by them containing any of the visible clocks
+        let folders = getFolderStructure().filter(folderVisible);
 
-        // Mark expanded folders
-        folders.forEach(folder => folder.expanded = this._expandedFolders[folder.id]);
+        // Mark expanded folders & filter children
+        folders.forEach(folder => {
+            folder.expanded = this._expandedFolders[folder.id];
+            folder.children = folder.children.filter(folderVisible);
+        });
 
         const sortA = (elem1, elem2) => elem1.name?.localeCompare(elem2.name);
         const sortM = (elem1, elem2) => elem1.sort - elem2.sort;
