@@ -1,0 +1,19 @@
+<li class="directory-item clock" data-clock-id="{{id}}">
+    <canvas width="512" height="512">
+    </canvas>
+    <div class="clock-details">
+        <h4 class="clock-name">
+            <a>{{name}} - {{filled}} / {{size}}</a>
+        </h4>
+        {{#if showButtons}}
+        <div class="clock-buttons">
+            <button class="increment" data-tooltip="clock-works.sidebar.increment" {{#if (gte filled size)}} disabled {{/if}}>
+                <i class="fas fa-plus-circle"></i>
+            </button>
+            <button class="decrement" data-tooltip="clock-works.sidebar.decrement" {{#if (lte filled 0)}} disabled {{/if}}>
+                <i class="fas fa-minus-circle"></i>
+            </button>
+        </div>
+        {{/if}}
+    </div>
+</li>

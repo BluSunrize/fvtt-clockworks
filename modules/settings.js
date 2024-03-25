@@ -8,13 +8,14 @@ Hooks.once("socketlib.ready", () => {
     socket.register('deleteClock', deleteClock);
     socket.register('updateRender', updateRender);
     socket.register('showClock', showClock);
+    socket.register('setFolder', setFolder);
 });
 
 export function generateClockId() {
     return `clock-works-${Math.random().toString(16).slice(2)}`;
 }
 
-export function getAllClocks(clockId) {
+export function getAllClocks() {
     const clockList = game.settings.get('fvtt-clock-works', 'clockList');
     return clockList;
 }
@@ -69,3 +70,34 @@ function showClock(clockId) {
     const display = new ClockDisplay(clockId);
     display.render(true);
 }
+
+export function getAllFolders() {
+    return game.settings.get('fvtt-clock-works', 'folders');
+}
+
+export async function getFolder(folderId) {
+    return getAllFolders()[folderId];
+}
+
+export async function setFolder(folderId, value) {
+    if (!game.user.isGM)
+        await socket.executeAsGM('setFolder', folderId, value);
+    else {
+        const folders = game.settings.get('fvtt-clock-works', 'folders');
+        folders[folderId] = value;
+        await game.settings.set('fvtt-clock-works', 'folders', folders);
+    }
+    return await socket.executeForEveryone('updateRender');
+}
+
+export async function deleteFolder(folderId) {
+    if (!game.user.isGM)
+        await socket.executeAsGM('deleteFolder', folderId);
+    else {
+        const folders = game.settings.get('fvtt-clock-works', 'folders');
+        delete folders[folderId];
+        await game.settings.set('fvtt-clock-works', 'folders', folders);
+    }
+    return await socket.executeForEveryone('updateRender');
+}
+
