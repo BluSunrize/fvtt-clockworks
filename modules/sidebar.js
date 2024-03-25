@@ -17,7 +17,8 @@ export class ClocksSidebarTab extends SidebarTab {
         return foundry.utils.mergeObject(super.defaultOptions, {
             id: "clocks",
             template: "/modules/clock-works/templates/sidebar.html",
-            title: "clock-works.clocks"
+            title: "clock-works.clocks",
+            scrollY: [".directory-list"],
         });
     }
 
