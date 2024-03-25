@@ -104,14 +104,19 @@ export class ClocksSidebarTab extends SidebarTab {
         });
         setDepth(nodes, 1)
 
-        // Create root node
+        const toplevelSort = game.settings.get('fvtt-clock-works', 'toplevelSort');
+
+        // Create root node & sort
         const tree = createNode(true, null, 0);
-        tree.children = nodes.sort(sortM);
+        tree.children = nodes.sort(toplevelSort === 'a' ? sortA : sortM);
+        tree.entries.sort(toplevelSort === 'a' ? sortA : sortM);
 
         // Return data to the sidebar
         return foundry.utils.mergeObject(context, {
             root: "templates/sidebar",
             tree: tree,
+            sortIcon: toplevelSort === "a" ? "fa-arrow-down-a-z" : "fa-arrow-down-short-wide",
+            sortTooltip: toplevelSort === "a" ? "SIDEBAR.SortModeAlpha" : "SIDEBAR.SortModeManual",
             canCreateEntry: game.user.isGM,
             canCreateFolder: game.user.isGM,
         });
@@ -194,6 +199,12 @@ export class ClocksSidebarTab extends SidebarTab {
         });
         dragDrop.bind(html[0]);
 
+        // Changing toplevel sorting
+        html.on("click", ".header-control.toggle-sort", evt => {
+            const toplevelSort = game.settings.get('fvtt-clock-works', 'toplevelSort');
+            game.settings.set('fvtt-clock-works', 'toplevelSort', toplevelSort === 'a' ? 'm' : 'a');
+            this.render();
+        });
 
         // Context menu
         ContextMenu.create(this, html, ".directory-item.folder", this._getFolderContextOptions());
