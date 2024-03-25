@@ -163,6 +163,8 @@ export class ClocksSidebarTab extends SidebarTab {
                 const subs = folder.find(".folder").addClass("collapsed");
                 subs.each((i, f) => this._expandedFolders[folderId] = false);
             }
+            if (this.popOut)
+                this.setPosition();
         });
 
         // Editing an existing clock
@@ -204,6 +206,14 @@ export class ClocksSidebarTab extends SidebarTab {
             const toplevelSort = game.settings.get('fvtt-clock-works', 'toplevelSort');
             game.settings.set('fvtt-clock-works', 'toplevelSort', toplevelSort === 'a' ? 'm' : 'a');
             this.render();
+        });
+
+        // Handle collapsing of folders
+        html.on("click", ".header-control.collapse-all", evt => {
+            html.find("li.folder").addClass("collapsed");
+            Object.keys(this._expandedFolders).forEach(key => this._expandedFolders[key] = false);
+            if (this.popOut)
+                this.setPosition();
         });
 
         // Context menu
