@@ -204,6 +204,56 @@ export class ClocksSidebarTab extends SidebarTab {
                 this.setPosition();
         });
 
+        // Handle search input
+        html.find('.header-search input[name="search"]').on('input', async event => {
+            event.preventDefault();
+            const query = SearchFilter.cleanQuery(event.currentTarget.value);
+            let entryIds = new Set();
+            const folderIds = new Set();
+
+            if (query) {
+                const regex = new RegExp(RegExp.escape(query), "i");
+                const allFolders = getFolderStructure();
+                const allClocks = Object.values(await getAllClocks());
+
+                const includeFolder = (folder) => {
+                    if (!folder) return;
+                    if (typeof folder === "string") folder = allFolders.get(folder);
+                    if (!folder) return;
+                    folderIds.add(folder.id);
+                    if (folder.folder)
+                        includeFolder(folder);
+                };
+
+                // First search folders by name
+                allFolders
+                    .filter(f => regex.test(SearchFilter.cleanQuery(f.name)))
+                    .forEach(includeFolder);
+
+                // Then search for clocks, either by name or found in previously selected folders
+                allClocks
+                    .filter(c => regex.test(SearchFilter.cleanQuery(c.name)) || folderIds.has(c.folder))
+                    .forEach(c => {
+                        entryIds.add(c.id);
+                        includeFolder(c.folder);
+                    });
+            }
+
+            // Hide / show entries in the list
+            html.find('li').not('.hidden').each((_, el) => {
+                if (el.classList.contains("folder")) {
+                    let match = query && folderIds.has(el.dataset.folderId);
+                    el.style.display = (!query || match) ? "flex" : "none";
+                    if (query && match)
+                        el.classList.remove("collapsed");
+                    else
+                        el.classList.toggle("collapsed", !this._expandedFolders[el.dataset.folderId]);
+                }
+                else
+                    el.style.display = (!query || entryIds.has(el.dataset.clockId)) ? "flex" : "none";
+            });
+        });
+
         // Context menu
         ContextMenu.create(this, html, ".directory-item.folder .folder-header", this._getFolderContextOptions(), { hookName: "FolderContext" });
         ContextMenu.create(this, html, ".directory-item.clock", this._getEntryContextOptions());
