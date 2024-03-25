@@ -1,4 +1,5 @@
-import { getClock, setClock } from "./settings.js";
+import { getFolderStructure, getFolderSubtree } from "./folders.js";
+import { getAllClocks, getClock, getFolder, setClock, setFolder } from "./settings.js";
 
 export function checkClockPermission(clock, permission, user = game.user) {
     const clockData = (typeof clock === "string") ? getClock(clock) : clock;
@@ -10,9 +11,10 @@ export function checkClockPermission(clock, permission, user = game.user) {
 }
 
 export class ClockPermissionForm extends FormApplication {
-    constructor(clockId) {
+    constructor(isFolder, targetId) {
         super();
-        this.clockId = clockId;
+        this.isFolder = isFolder;
+        this.targetId = targetId;
     }
 
     static get defaultOptions() {
@@ -27,15 +29,19 @@ export class ClockPermissionForm extends FormApplication {
     }
 
     getData(options) {
-        const clockData = this.clockId ? getClock(this.clockId) : {};
-        const ownership = clockData.ownership || { default: 0 };
+        let ownership = null;
+        if (!this.isFolder) {
+            const clockData = this.targetId ? getClock(this.targetId) : {};
+            ownership = clockData.ownership || { default: 0 };
+        }
 
         // User permission levels
         const playerLevels = Object.entries(CONST.DOCUMENT_META_OWNERSHIP_LEVELS).map(([name, level]) => {
             return { level, label: game.i18n.localize(`OWNERSHIP.${name}`) };
         });
         // Remove "No Change"
-        playerLevels.pop();
+        if (!this.isFolder)
+            playerLevels.pop();
         for (let [name, level] of Object.entries(CONST.DOCUMENT_OWNERSHIP_LEVELS)) {
             if (level < 0) continue;
             playerLevels.push({ level, label: game.i18n.localize(`OWNERSHIP.${name}`) });
@@ -49,31 +55,54 @@ export class ClockPermissionForm extends FormApplication {
         const users = game.users.map(user => {
             return {
                 user,
-                level: ownership[user.id],
+                level: this.isFolder ? CONST.DOCUMENT_META_OWNERSHIP_LEVELS.NOCHANGE : ownership[user.id],
             };
         });
 
         return {
             currentDefault: ownership?.default ?? playerLevels[0],
-            instructions: game.i18n.localize('clock-works.edit-form.permission-hint'),
+            instructions: game.i18n.localize(this.isFolder ? 'OWNERSHIP.HintFolder' : 'clock-works.edit-form.permission-hint'),
             defaultLevels,
             playerLevels,
-            isFolder: false,
+            isFolder: this.isFolder,
             users
         };
     }
 
     async _updateObject(event, formData) {
         const newOwnership = {};
+        const metaLevels = CONST.DOCUMENT_META_OWNERSHIP_LEVELS;
+        const omit = this.isFolder ? metaLevels.NOCHANGE : metaLevels.DEFAULT;
         for (let [user, level] of Object.entries(formData)) {
-            if (level === CONST.DOCUMENT_META_OWNERSHIP_LEVELS.DEFAULT) {
+            if (level === omit) {
                 delete newOwnership[user];
                 continue;
             }
             newOwnership[user] = level;
         }
-        const existing = getClock(this.clockId);
-        const newValue = foundry.utils.mergeObject(existing, { ownership: newOwnership });
-        await setClock(this.clockId, newValue);
+        let updates = [];
+        if (!this.isFolder) {
+            // Set ownership for a single clock
+            const existing = await getClock(this.targetId);
+            existing.ownership = newOwnership;
+            updates.push(existing);
+        } else {
+            // Acquire all subfolders
+            const allFolders = getFolderStructure();
+            const subtreeIDs = getFolderSubtree(allFolders.get(this.targetId)).map(f => f.id);
+            // Set ownership for all clocks in those folders
+            Object.values(getAllClocks())
+                .filter(clock => subtreeIDs.includes(clock.folder))
+                .forEach(async clock => {
+                    const ownership = foundry.utils.deepClone(clock.ownership);
+                    for (let [k, v] of Object.entries(newOwnership)) {
+                        if (v === metaLevels.DEFAULT) delete ownership[k];
+                        else ownership[k] = v;
+                    }
+                    clock.ownership = ownership;
+                    updates.push(clock);
+                });
+        }
+        return Promise.all(updates.map(update => setClock(update.id, update)));
     }
 }

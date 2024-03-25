@@ -199,7 +199,7 @@ export class ClocksSidebarTab extends SidebarTab {
         });
 
         // Context menu
-        ContextMenu.create(this, html, ".directory-item.folder", this._getFolderContextOptions());
+        ContextMenu.create(this, html, ".directory-item.folder .folder-header", this._getFolderContextOptions(), { hookName: "FolderContext" });
         ContextMenu.create(this, html, ".directory-item.clock", this._getEntryContextOptions());
     }
 
@@ -209,14 +209,22 @@ export class ClocksSidebarTab extends SidebarTab {
                 name: "clock-works.sidebar.edit-folder",
                 icon: '<i class="fas fa-edit"></i>',
                 condition: () => game.user.isGM,
-                callback: li => new FolderForm(li.data('folderId')).render(true),
+                callback: header => new FolderForm(header.closest('li').data('folderId')).render(true),
+            },
+            {
+                name: "OWNERSHIP.Configure",
+                icon: '<i class="fas fa-lock"></i>',
+                condition: () => game.user.isGM,
+                callback: header => {
+                    return new ClockPermissionForm(true, header.closest('li').data('folderId')).render(true);
+                }
             },
             {
                 name: "clock-works.sidebar.delete-folder",
                 icon: '<i class="fas fa-dumpster"></i>',
                 condition: () => game.user.isGM,
-                callback: li => {
-                    const folder = getFolderStructure().get(li.data('folderId'));
+                callback: header => {
+                    const folder = getFolderStructure().get(header.closest('li').data('folderId'));
                     const subtreeIDs = getFolderSubtree(folder)
                         .map(f => f.id);
                     const clockIDs = Object.values(getAllClocks())
@@ -240,15 +248,6 @@ export class ClocksSidebarTab extends SidebarTab {
     _getEntryContextOptions() {
         return [
             {
-                name: "OWNERSHIP.Configure",
-                icon: '<i class="fas fa-lock"></i>',
-                condition: () => game.user.isGM,
-                callback: li => {
-                    const clockId = li.data('clockId');
-                    return new ClockPermissionForm(clockId).render(true);
-                }
-            },
-            {
                 name: "clock-works.sidebar.show",
                 icon: '<i class="fas fa-eye"></i>',
                 condition: () => game.user.isGM,
@@ -264,6 +263,15 @@ export class ClocksSidebarTab extends SidebarTab {
                 callback: li => {
                     const clockId = li.data('clockId');
                     return ClockEditForm.open(clockId);
+                }
+            },
+            {
+                name: "OWNERSHIP.Configure",
+                icon: '<i class="fas fa-lock"></i>',
+                condition: () => game.user.isGM,
+                callback: li => {
+                    const clockId = li.data('clockId');
+                    return new ClockPermissionForm(false, clockId).render(true);
                 }
             },
             {
