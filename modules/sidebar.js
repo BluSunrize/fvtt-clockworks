@@ -1,7 +1,7 @@
 import { ClockEditForm, defaultClockValues } from './clock-edit.js';
 import { ClockDisplay, renderClockImage } from './clock-display.js';
 import { deleteClock, generateClockId, getAllClocks, getClock, setClock, shockClockToAll, getAllFolders, setFolder, deleteFolder } from './settings.js';
-import { FolderForm } from './folders.js';
+import { FolderForm, getFolderStructure, getFolderSubtree } from './folders.js';
 import { ClockPermissionForm, checkClockPermission } from './permissions.js';
 
 export class ClocksSidebarTab extends SidebarTab {
@@ -44,28 +44,6 @@ export class ClocksSidebarTab extends SidebarTab {
             $('#sidebar #cards').before($('<section id="clocks" data-tab="clocks"> class="tab"'));
     }
 
-    _getFolderStructure() {
-        const folders = foundry.utils.deepClone(Object.values(getAllFolders()));
-        // update folders to mark expanded ones and collect children
-        folders.forEach(folder => {
-            folder.expanded = this._expandedFolders[folder.id];
-            folder.children = folders.filter(child => child.folder === folder.id);
-            folder.collectFolderTree = () => {
-                return children.reduce(
-                    (accumulator, currentValue) => accumulator + currentValue,
-                    initialValue,
-                );
-            }
-        });
-        return folders;
-    }
-
-    _getFolderSubtree(folder, accumulator = []) {
-        accumulator.push(folder);
-        folder.children?.forEach(child => this._getFolderSubtree(child, accumulator));
-        return accumulator;
-    }
-
     /** @override */
     async getData(options = {}) {
         const context = await super.getData(options);
@@ -77,7 +55,10 @@ export class ClocksSidebarTab extends SidebarTab {
         });
 
         // Get dictionary of folders
-        const folders = this._getFolderStructure();
+        const folders = getFolderStructure();
+
+        // Mark expanded folders
+        folders.forEach(folder => folder.expanded = this._expandedFolders[folder.id]);
 
         const sortA = (elem1, elem2) => elem1.name?.localeCompare(elem2.name);
         const sortM = (elem1, elem2) => elem1.sort - elem2.sort;
@@ -235,8 +216,8 @@ export class ClocksSidebarTab extends SidebarTab {
                 icon: '<i class="fas fa-dumpster"></i>',
                 condition: () => game.user.isGM,
                 callback: li => {
-                    const folder = this._getFolderStructure().find(f => f.id === li.data('folderId'));
-                    const subtreeIDs = this._getFolderSubtree(folder)
+                    const folder = getFolderStructure().get(li.data('folderId'));
+                    const subtreeIDs = getFolderSubtree(folder)
                         .map(f => f.id);
                     const clockIDs = Object.values(getAllClocks())
                         .filter(clock => subtreeIDs.includes(clock.folder))
@@ -339,8 +320,8 @@ export class ClocksSidebarTab extends SidebarTab {
     }
 
     async _handleDroppedFolder(target, data) {
-        const allFolders = this._getFolderStructure();
-        const folder = allFolders.find(f => f.id === data.id);
+        const allFolders = getFolderStructure();
+        const folder = allFolders.get(data.id);
         if (!folder)
             return;
 
@@ -354,7 +335,7 @@ export class ClocksSidebarTab extends SidebarTab {
         const sortData = { sortKey: 'sort', sortBefore: true };
         const isRelative = target && target.dataset.folderId;
         if (isRelative) {
-            const targetFolder = allFolders.find(f => f.id === target.dataset.folderId);
+            const targetFolder = allFolders.get(target.dataset.folderId);
             // Sort relative to a collapsed Folder
             if (target.classList.contains('collapsed')) {
                 sortData.target = targetFolder;
@@ -377,7 +358,7 @@ export class ClocksSidebarTab extends SidebarTab {
             if (sortData.parentId === data.id)
                 return;
             // Prevent creating a loop
-            if (this._getFolderSubtree(folder).map(f => f.id).includes(sortData.parentId))
+            if (getFolderSubtree(folder).map(f => f.id).includes(sortData.parentId))
                 return;
         } else
             sortData.parentId = '';

@@ -55,3 +55,19 @@ export function defaultFolderValues() {
         sorting: 'a'
     };
 }
+
+export function getFolderStructure() {
+    const folders = foundry.utils.deepClone(Object.values(getAllFolders()));
+    // update folders to mark expanded ones and collect children
+    folders.forEach(folder => folder.children = folders.filter(child => child.folder === folder.id));
+    folders.get = function(id) {
+        return this.find(f => f.id === id);
+    };
+    return folders;
+}
+
+export function getFolderSubtree(folder, accumulator = []) {
+    accumulator.push(folder);
+    folder.children?.forEach(child => getFolderSubtree(child, accumulator));
+    return accumulator;
+}
