@@ -8,10 +8,12 @@
                 </span>
                 {{localize "clock-works.sidebar.create"}}
             </button>
+            {{#if @root.canCreateFolder}}
             <button class="create-folder">
                 <i class="fas fa-folder"></i>
                 {{localize "clock-works.sidebar.create-folder"}}
             </button>
+            {{/if}}
         </div>
         <div class="header-search flexrow">
             <i class="fas fa-search"></i>
