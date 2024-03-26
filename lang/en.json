@@ -1,5 +1,11 @@
 {
     "clock-works.clocks": "Clocks",
+    "clock-works.settings": {
+        "default-ownership": {
+            "name": "Default Ownership",
+            "hint": "Decides the default ownership level of any newly created clock. \"Limited\" means the user may see the clock but its name is hidden, \"Observer\" allows seeing the name as well, \"Owner\" allows use of the increase and decrease buttons and editing the clocks properties."
+        }
+    },
     "clock-works.edit-form": {
         "title": "Edit Clock",
         "save": "Save and Close",
@@ -22,7 +28,7 @@
             "colorframe": "Frame color",
             "colorframe-tooltip": "Color of the clock frame"
         },
-        "permission-hint": "Configure access to this specific Clock, allowing each User to be assigned a different level of visibility. \"Limited\" means the user may see the clock, \"Observer\" allows use of the increase and decrease buttons, \"Owner\" allows editing the clocks properties."
+        "permission-hint": "Configure access to this specific Clock, allowing each User to be assigned a different level of visibility. \"Limited\" means the user may see the clock but its name is hidden, \"Observer\" allows seeing the name as well, \"Owner\" allows use of the increase and decrease buttons and editing the clocks properties."
     },
     "clock-works.folders": {
         "default-name": "New Folder"
