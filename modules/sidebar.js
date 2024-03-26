@@ -49,10 +49,11 @@ export class ClocksSidebarTab extends SidebarTab {
     async getData(options = {}) {
         const context = await super.getData(options);
 
-        // Get filtered list of clocks for visibility, "Limited" allows viewing them, "Observer" allows pressing the buttons
+        // Get filtered list of clocks for visibility, "Limited" allows viewing them but without name, "Observer" allows seeing the name, "Owner" is required to change them
         const clockList = Object.values(getAllClocks()).filter(clock => checkClockPermission(clock, CONST.DOCUMENT_OWNERSHIP_LEVELS.LIMITED));
         clockList.forEach(clock => {
-            clock.showButtons = checkClockPermission(clock, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER);
+            clock.showName = checkClockPermission(clock, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER);
+            clock.showButtons = checkClockPermission(clock, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER);
         });
         // Get list of folders that clocks are contained in
         const clockFolders = clockList.map(clock => clock.folder);

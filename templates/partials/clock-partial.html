@@ -3,7 +3,7 @@
     </canvas>
     <div class="clock-details">
         <h4 class="clock-name">
-            <a>{{name}} - {{filled}} / {{size}}</a>
+            <a>{{#if showName}} {{name}} {{else}} {{localize "clock-works.sidebar.obfuscated" index=@index}} {{/if}} - {{filled}} / {{size}}</a>
         </h4>
         {{#if showButtons}}
         <div class="clock-buttons">

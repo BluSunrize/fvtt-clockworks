@@ -43,6 +43,7 @@
         "duplicate": "Duplicate",
         "delete": "Delete",
         "postfix-copy": " (Copy)",
+        "obfuscated": "Unknown Clock #{index}",
         "increment": "Increment",
         "decrement": "Decrement"
     }
