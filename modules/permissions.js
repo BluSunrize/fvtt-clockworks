@@ -4,7 +4,7 @@ import { getAllClocks, getClock, getFolder, setClock, setFolder } from './settin
 export function checkClockPermission(clock, permission, user = game.user) {
     const clockData = (typeof clock === 'string') ? getClock(clock) : clock;
     const perms = CONST.DOCUMENT_OWNERSHIP_LEVELS;
-    const ownership = clockData.ownership ?? { default: 0 };
+    const ownership = clockData.ownership ?? { default: game.settings.get('clock-works', 'defaultOwnership') };
     const level = user.isGM ? perms.OWNER : ownership[user.id] || ownership.default;
     const target = (typeof permission === 'string') ? (perms[permission] ?? perms.OWNER) : permission;
     return level >= target;
@@ -32,7 +32,7 @@ export class ClockPermissionForm extends FormApplication {
         let ownership = null;
         if (!this.isFolder) {
             const clockData = this.targetId ? getClock(this.targetId) : {};
-            ownership = clockData.ownership || { default: 0 };
+            ownership = clockData.ownership ?? { default: game.settings.get('clock-works', 'defaultOwnership') };
         }
 
         // User permission levels

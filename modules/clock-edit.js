@@ -75,7 +75,7 @@ export function defaultClockValues() {
         imagebg: '',
         imagefg: '',
         ownership: {
-            default: 0
+            default: game.settings.get('clock-works', 'defaultOwnership')
         }
     };
 }

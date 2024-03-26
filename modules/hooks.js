@@ -3,6 +3,7 @@ import { ClocksSidebarTab } from './sidebar.js';
 
 Hooks.once('init', async () => {
 
+    // I realized only later that these keys do not match the module id. I have to fix that in the future.
     game.settings.register('fvtt-clock-works', 'clockList', {
         data: {},
         scope: 'world',
@@ -25,6 +26,21 @@ Hooks.once('init', async () => {
         default: 'm',
         type: String,
     });
+
+    game.settings.register('clock-works', 'defaultOwnership', {
+        name: 'clock-works.settings.default-ownership.name',
+        hint: 'clock-works.settings.default-ownership.hint',
+        scope: 'world',
+        config: true,
+        type: Number,
+        default: 0,
+        choices: Object.fromEntries(
+            Object.entries(CONST.DOCUMENT_OWNERSHIP_LEVELS)
+                .filter(([key, val]) => val >= 0)
+                .map(([key, val]) => [val, `OWNERSHIP.${key}`])
+        ),
+    });
+
 
     loadTemplates([
         'modules/clock-works/templates/partials/clock-partial.html',
