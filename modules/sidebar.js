@@ -291,10 +291,10 @@ export class ClocksSidebarTab extends SidebarTab {
                     Dialog.confirm({
                         title: `${game.i18n.localize('FOLDER.Delete')} ${folder.name}`,
                         content: `<h4>${game.i18n.localize('AreYouSure')}</h4><p>${game.i18n.localize('FOLDER.DeleteWarning')}</p>`,
-                        yes: () => Promise.all(
+                        yes: () => Promise.all([
                             ...subtreeIDs.map(folderId => deleteFolder(folderId)),
                             ...clockIDs.map(clockId => deleteClock(clockId))
-                        ),
+                        ]),
                         no: () => { },
                         defaultYes: false
                     })
