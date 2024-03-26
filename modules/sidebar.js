@@ -57,7 +57,7 @@ export class ClocksSidebarTab extends SidebarTab {
         });
         // Get list of folders that clocks are contained in
         const clockFolders = clockList.map(clock => clock.folder);
-        const folderVisible = f => getFolderSubtree(f).some(sub => clockFolders.includes(sub.id));
+        const folderVisible = f => game.user.isGM || getFolderSubtree(f).some(sub => clockFolders.includes(sub.id));
 
         // Get list of folders, filtered by them containing any of the visible clocks
         let folders = getFolderStructure().filter(folderVisible);
