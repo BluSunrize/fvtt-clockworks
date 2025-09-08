@@ -1,6 +1,8 @@
 import { getFolderStructure, getFolderSubtree } from './folders.js';
 import { getAllClocks, getClock, getFolder, setClock, setFolder } from './settings.js';
 
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
 export function checkClockPermission(clock, permission, user = game.user) {
     const clockData = (typeof clock === 'string') ? getClock(clock) : clock;
     const perms = CONST.DOCUMENT_OWNERSHIP_LEVELS;
@@ -10,25 +12,54 @@ export function checkClockPermission(clock, permission, user = game.user) {
     return level >= target;
 }
 
-export class ClockPermissionForm extends FormApplication {
+export class ClockPermissionForm extends HandlebarsApplicationMixin(ApplicationV2) {
     constructor(isFolder, targetId) {
         super();
         this.isFolder = isFolder;
         this.targetId = targetId;
     }
 
-    static get defaultOptions() {
-        const defaults = super.defaultOptions;
-        const overrides = {
-            width: 400,
-            id: 'clock-works-permission-form',
+    /** @inheritDoc */
+    static DEFAULT_OPTIONS = {
+        tag: 'form',
+        classes: ['clock-works', 'ownership'],
+        template: 'templates/apps/document-ownership.hbs',
+        window: {
+            contentClasses: ['standard-form'],
+            icon: "fa-solid fa-file-lock"
+        },
+        position: { width: 420 },
+        form: {
+            handler: ClockPermissionForm._onSubmit,
+            closeOnSubmit: true
+        },
+        sheetConfig: false
+    };
+
+    /** @override */
+    static PARTS = {
+        ownership: {
             template: 'templates/apps/document-ownership.hbs',
-        };
-        const mergedOptions = foundry.utils.mergeObject(defaults, overrides);
-        return mergedOptions;
+            root: true,
+            scrollable: ['menu.scrollable']
+        },
+        footer: {
+            template: 'templates/generic/form-footer.hbs'
+        }
+    };
+
+    get title() {
+        let name;
+        if (!this.isFolder)
+            name = getClock(this.targetId).name;
+        else
+            name = getFolderStructure().get(this.targetId).name;
+        return game.i18n.format("OWNERSHIP.Title", { object: name });
     }
 
-    getData(options) {
+    /** @override */
+    async _prepareContext(options) {
+        const context = await super._prepareContext(options);
         let ownership = null;
         if (!this.isFolder) {
             const clockData = this.targetId ? getClock(this.targetId) : {};
@@ -59,21 +90,22 @@ export class ClockPermissionForm extends FormApplication {
             };
         });
 
-        return {
+        return Object.assign(context, {
             currentDefault: ownership?.default ?? playerLevels[0],
             instructions: game.i18n.localize(this.isFolder ? 'OWNERSHIP.HintFolder' : 'clock-works.edit-form.permission-hint'),
             defaultLevels,
             playerLevels,
             isFolder: this.isFolder,
-            users
-        };
+            users,
+            buttons: [{ type: "submit", icon: "fa-solid fa-floppy-disk", label: "OWNERSHIP.Save" }]
+        });
     }
 
-    async _updateObject(event, formData) {
+    static async _onSubmit(_event, _form, formData) {
         const newOwnership = {};
         const metaLevels = CONST.DOCUMENT_META_OWNERSHIP_LEVELS;
         const omit = this.isFolder ? metaLevels.NOCHANGE : metaLevels.DEFAULT;
-        for (let [user, level] of Object.entries(formData)) {
+        for (let [user, level] of Object.entries(formData.object)) {
             if (level === omit) {
                 delete newOwnership[user];
                 continue;
