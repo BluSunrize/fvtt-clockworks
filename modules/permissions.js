@@ -22,7 +22,7 @@ export class ClockPermissionForm extends FormApplication {
         const overrides = {
             width: 400,
             id: 'clock-works-permission-form',
-            template: 'templates/apps/ownership.html',
+            template: 'templates/apps/document-ownership.hbs',
         };
         const mergedOptions = foundry.utils.mergeObject(defaults, overrides);
         return mergedOptions;
