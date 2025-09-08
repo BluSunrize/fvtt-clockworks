@@ -43,8 +43,8 @@ Hooks.once('init', async () => {
 
 
     loadTemplates([
-        'modules/clock-works/templates/partials/clock-partial.html',
-        'modules/clock-works/templates/partials/folder-partial.html',
+        'modules/clock-works/templates/partials/clock-partial.hbs',
+        'modules/clock-works/templates/partials/folder-partial.hbs',
     ]);
 
     ClockEditForm.init();

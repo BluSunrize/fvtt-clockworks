@@ -55,7 +55,7 @@ export async function shockClockToAll(clockId) {
 
 function updateRender() {
     // re-render sidebar and any opened clock displays
-    ui.sidebar.tabs.clocks.render();
+    ui.clocks.render();
     Object.values(ui.windows).forEach(app => {
         if(app instanceof ClockDisplay)
             app.render();

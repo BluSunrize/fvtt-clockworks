@@ -1,0 +1,28 @@
+<li class="directory-item folder flexcol {{#if folder.expanded}}expanded{{/if}}" data-action="folderClick" data-folder-id="{{folder.id}}"
+    data-folder-depth="{{node.depth}}">
+    <header class="folder-header" {{#if folder.color}}style="background-color: {{folder.color}}" {{/if}}>
+        <i class="fas fa-folder-open fa-fw"></i>
+        <span class="folder-name ellipsis">{{folder.name}}</span>
+        {{#if @root.canCreateFolder}}
+        <button class="create-button create-folder icon icon-plus fas fa-folder" data-action="createFolder">
+        </button>
+        {{/if}}
+        {{#if @root.canCreateEntry}}
+        <button class="create-button create-clock icon icon-plus" data-action="createClock">
+            <span class="fa-stack" style="font-size: 125%; width: 1.5em; height: 1.5em; line-height: 1.25em;">
+                <i class="far fa-circle fa-stack-1x"></i>
+                <i class="far fa-asterisk fa-stack-1x"></i>
+            </span>
+        </button>
+        {{/if}}
+    </header>
+
+    <ol class="subdirectory" {{#if folder.color}}style="border-left-color: {{folder.color}}" {{/if}}>
+        {{~#each node.children}}
+        {{> "modules/clock-works/templates/partials/folder-partial.hbs" node=this folder=this.folder}}
+        {{/each}}
+        {{#each node.entries}}
+        {{> "modules/clock-works/templates/partials/clock-partial.hbs"}}
+        {{/each~}}
+    </ol>
+</li>

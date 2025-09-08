@@ -4,50 +4,73 @@ import { deleteClock, generateClockId, getAllClocks, getClock, setClock, shockCl
 import { FolderForm, getFolderStructure, getFolderSubtree } from './folders.js';
 import { ClockPermissionForm, checkClockPermission } from './permissions.js';
 
-export class ClocksSidebarTab extends SidebarTab {
+const { HandlebarsApplicationMixin } = foundry.applications.api;
+const { AbstractSidebarTab } = foundry.applications.sidebar;
+
+export class ClocksSidebarTab extends HandlebarsApplicationMixin(AbstractSidebarTab) {
     constructor(options = {}) {
         super(options);
-        if (ui.sidebar) ui.sidebar.tabs.clocks = this;
-
-        this._expandedFolders = {}
-    }
-
-    /** @override */
-    static get defaultOptions() {
-        return foundry.utils.mergeObject(super.defaultOptions, {
-            id: 'clocks',
-            template: '/modules/clock-works/templates/sidebar.html',
-            title: 'clock-works.clocks',
-            scrollY: ['.directory-list'],
-        });
     }
 
     static init() {
         CONFIG.ui.clocks = ClocksSidebarTab;
+        Sidebar.TABS.clocks = {
+            tooltip: "clock-works.clocks",
+            icon: "fa-solid fa-chart-pie"
+        }
     }
 
-    static addSidebarElements() {
-        // Set new width for tabs
-        const tabs = $('#sidebar-tabs');
-        const width = Math.floor(parseInt(tabs.css('--sidebar-width')) / (tabs.children().length + 1));
-        tabs.css('--sidebar-tab-width', `${width}px`);
-
-        // Create tab icon
-        const tab = $('<a data-tab="clocks" data-tooltip="clock-works.clocks">')
-            .addClass('item')
-            .append($('<i>').addClass('fas fa-chart-pie'));
-        // Add to sidebar before cards
-        if (!$('#sidebar-tabs [data-tab="clocks"]').length)
-            $('#sidebar-tabs [data-tab="cards"]').before(tab);
-
-        // Add dummy section which will be replaced by template later
-        if (!$('#sidebar section[data-tab="clocks"]').length)
-            $('#sidebar #cards').before($('<section id="clocks" data-tab="clocks"> class="tab"'));
-    }
+    static #expandedFolders = {}
 
     /** @override */
-    async getData(options = {}) {
-        const context = await super.getData(options);
+    static tabName = "clocks";
+
+    /** @override */
+    static PARTS = {
+        settings: {
+            template: "modules/clock-works/templates/sidebar.hbs",
+            templates: ["modules/clock-works/templates/partials/folder-partial.hbs", "modules/clock-works/templates/partials/clock-partial.hbs"],
+            root: true
+        }
+    };
+
+    /** @override */
+    static DEFAULT_OPTIONS = {
+        classes: ['directory', 'flexcol'],
+        window: {
+            title: "clock-works.clocks"
+        },
+        actions: {
+            createClock: async evt => {
+                const newClock = defaultClockValues();
+                // Set owner of the clock
+                newClock.ownership[game.user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
+                // Set folder of the clock
+                const parentFolderId = $(evt.target).parents('li.folder').first().data('folderId');
+                newClock.folder = parentFolderId;
+                // Save clock and open edit form
+                await setClock(newClock.id, newClock);
+                ClockEditForm.open(newClock.id);
+            },
+            createFolder: evt => {
+                const parentFolderId = $(evt.target).parents('li.folder').first().data('folderId');
+                new FolderForm(null, parentFolderId).render(true);
+            },
+            toggleSort: ClocksSidebarTab.#toggleSort,
+            collapseFolders: ClocksSidebarTab.#collapseFolders,
+            folderClick: ClocksSidebarTab.#toggleFolder,
+            editClock: evt => {
+                const display = new ClockDisplay($(evt.target).parents('li').data('clockId'));
+                display.render(true);
+            },
+            increment: evt => ClocksSidebarTab.#changeClock(evt, +1),
+            decrement: evt => ClocksSidebarTab.#changeClock(evt, -1),
+        }
+    };
+
+    /** @inheritDoc */
+    async _prepareContext(options) {
+        const context = await super._prepareContext(options);
 
         // Get filtered list of clocks for visibility, "Limited" allows viewing them but without name, "Observer" allows seeing the name, "Owner" is required to change them
         const clockList = Object.values(getAllClocks()).filter(clock => checkClockPermission(clock, CONST.DOCUMENT_OWNERSHIP_LEVELS.LIMITED));
@@ -64,7 +87,7 @@ export class ClocksSidebarTab extends SidebarTab {
 
         // Mark expanded folders & filter children
         folders.forEach(folder => {
-            folder.expanded = this._expandedFolders[folder.id];
+            folder.expanded = ClocksSidebarTab.#expandedFolders[folder.id];
             folder.children = folder.children.filter(folderVisible);
         });
 
@@ -101,9 +124,7 @@ export class ClocksSidebarTab extends SidebarTab {
         tree.children = nodes.sort(toplevelSort === 'a' ? sortA : sortM);
         tree.entries.sort(toplevelSort === 'a' ? sortA : sortM);
 
-        // Return data to the sidebar
-        return foundry.utils.mergeObject(context, {
-            root: 'templates/sidebar',
+        return Object.assign(context, {
             tree: tree,
             sortIcon: toplevelSort === 'a' ? 'fa-arrow-down-a-z' : 'fa-arrow-down-short-wide',
             sortTooltip: toplevelSort === 'a' ? 'SIDEBAR.SortModeAlpha' : 'SIDEBAR.SortModeManual',
@@ -112,72 +133,67 @@ export class ClocksSidebarTab extends SidebarTab {
         });
     }
 
+    // Toggle between alphabetic or manual sort
+    static #toggleSort() {
+        const toplevelSort = game.settings.get('fvtt-clock-works', 'toplevelSort');
+        game.settings.set('fvtt-clock-works', 'toplevelSort', toplevelSort === 'a' ? 'm' : 'a');
+        this.render();
+    }
+
+    // Collapse all folders
+    static #collapseFolders() {
+        $(this.element).find('li.folder').removeClass('expanded');
+        Object.keys(ClocksSidebarTab.#expandedFolders).forEach(key => ClocksSidebarTab.#expandedFolders[key] = false);
+        if (this.popOut)
+            this.setPosition();
+    }
+
+    // Open or close folder
+    static #toggleFolder(evt) {
+        const folder = $(evt.target).closest('li.directory-item.folder');
+        folder.toggleClass('expanded');
+        const expanded = folder.hasClass('expanded');
+        const folderId = folder.data('folderId');
+        if (expanded) ClocksSidebarTab.#expandedFolders[folderId] = true;
+        else ClocksSidebarTab.#expandedFolders[folderId] = false;
+        if (!expanded) {
+            const subs = folder.find('.folder').removeClass('expanded');
+            subs.each((i, f) => ClocksSidebarTab.#expandedFolders[folderId] = false);
+        }
+        if (this.popOut)
+            this.setPosition();
+    }
+
+    // Increment or decrement clock
+    static #changeClock(evt, change) {
+        const clockId = $(evt.target).parents('li').data('clockId');
+        const clock = getClock(clockId);
+        const newValue = Math.max(0, Math.min(clock.filled + change, clock.size));
+        if (newValue !== clock.filled) {
+            clock.filled = newValue;
+            setClock(clockId, clock);
+        }
+    }
 
     /** @inheritDoc */
-    activateListeners(html) {
-        super.activateListeners(html);
+    async _onFirstRender(context, options) {
+        await super._onFirstRender(context, options);
 
-        // Adding a new clock
-        html.find('.create-clock').click(async evt => {
-            evt.stopPropagation();
-            const newClock = defaultClockValues();
-            // Set owner of the clock
-            newClock.ownership[game.user.id] = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
-            // Set folder of the clock
-            const parentFolderId = $(evt.target).parents('li.folder').first().data('folderId');
-            newClock.folder = parentFolderId;
-            // Save clock and open edit form
-            await setClock(newClock.id, newClock);
-            ClockEditForm.open(newClock.id);
+        this._createContextMenu(this._getFolderContextOptions, ".directory-item.folder .folder-header", {
+            fixed: true,
+            hookName: "getFolderContextOptions",
+            parentClassHooks: false
         });
+        this._createContextMenu(this._getEntryContextOptions, ".directory-item.clock");
+    }
 
-        // Adding a new folder
-        html.find('.create-folder').click(async evt => {
-            evt.stopPropagation();
-            const parentFolderId = $(evt.target).parents('li.folder').first().data('folderId');
-            new FolderForm(null, parentFolderId).render(true);
-        });
-
-        // Handle folder expansion
-        html.on('click', '.folder-header', evt => {
-            let folder = $(evt.currentTarget.parentElement);
-            let collapsed = folder.hasClass('collapsed');
-            const folderId = folder.data('folderId');
-            this._expandedFolders[folderId] = collapsed;
-            // Expand
-            if (collapsed)
-                folder.removeClass('collapsed');
-            // Collapse
-            else {
-                folder.addClass('collapsed');
-                const subs = folder.find('.folder').addClass('collapsed');
-                subs.each((i, f) => this._expandedFolders[folderId] = false);
-            }
-            if (this.popOut)
-                this.setPosition();
-        });
-
-        // Editing an existing clock
-        html.find('li.directory-item.clock a').click(evt => {
-            const display = new ClockDisplay($(evt.target).parents('li').data('clockId'));
-            display.render(true);
-        });
-
-        // Increment or decrement clock
-        function changeClock(evt, change) {
-            const clockId = $(evt.target).parents('li').data('clockId');
-            const clock = getClock(clockId);
-            const newValue = Math.max(0, Math.min(clock.filled + change, clock.size));
-            if (newValue !== clock.filled) {
-                clock.filled = newValue;
-                setClock(clockId, clock);
-            }
-        }
-        html.find('.increment').click(evt => changeClock(evt, +1));
-        html.find('.decrement').click(evt => changeClock(evt, -1));
+    /** @inheritDoc */
+    async _onRender(context, options) {
+        await super._onRender(context, options);
+        $(this.element).find('li.clock').each(renderClockImage);
 
         // Drag + drop handling
-        const dragDrop = new DragDrop({
+        new foundry.applications.ux.DragDrop.implementation({
             dragSelector: '.directory-item',
             dropSelector: '.directory-list',
             permissions: {
@@ -188,93 +204,85 @@ export class ClocksSidebarTab extends SidebarTab {
                 dragstart: this._onDragStart.bind(this),
                 drop: this._onDragDrop.bind(this)
             }
-        });
-        dragDrop.bind(html[0]);
-
-        // Changing toplevel sorting
-        html.on('click', '.header-control.toggle-sort', evt => {
-            const toplevelSort = game.settings.get('fvtt-clock-works', 'toplevelSort');
-            game.settings.set('fvtt-clock-works', 'toplevelSort', toplevelSort === 'a' ? 'm' : 'a');
-            this.render();
-        });
-
-        // Handle collapsing of folders
-        html.on('click', '.header-control.collapse-all', evt => {
-            html.find('li.folder').addClass('collapsed');
-            Object.keys(this._expandedFolders).forEach(key => this._expandedFolders[key] = false);
-            if (this.popOut)
-                this.setPosition();
+        }).bind(this.element);
+        this.element.querySelectorAll('.directory-item.folder').forEach(folder => {
+            folder.addEventListener('dragenter', this._onDragHighlight.bind(this));
+            folder.addEventListener('dragleave', this._onDragHighlight.bind(this));
         });
 
         // Handle search input
-        html.find('.header-search input[name="search"]').on('input', async event => {
-            event.preventDefault();
-            const query = SearchFilter.cleanQuery(event.currentTarget.value);
-            let entryIds = new Set();
-            const folderIds = new Set();
+        new foundry.applications.ux.SearchFilter({
+            inputSelector: '.header-search input[name="search"]',
+            contentSelector: '.directory-list',
+            callback: this._onSearchFilter.bind(this),
+            initial: this.element.querySelector('.header-search input[name="search"]').value
+        }).bind(this.element);
+    }
 
-            if (query) {
-                const regex = new RegExp(RegExp.escape(query), 'i');
-                const allFolders = getFolderStructure();
-                const allClocks = Object.values(await getAllClocks());
 
-                const includeFolder = (folder) => {
-                    if (!folder) return;
-                    if (typeof folder === 'string') folder = allFolders.get(folder);
-                    if (!folder) return;
-                    folderIds.add(folder.id);
-                    if (folder.folder)
-                        includeFolder(folder);
-                };
+    async _onSearchFilter(event, query, rgx, html) {
+        let entryIds = new Set();
+        const folderIds = new Set();
 
-                // First search folders by name
-                allFolders
-                    .filter(f => regex.test(SearchFilter.cleanQuery(f.name)))
-                    .forEach(includeFolder);
+        if (query) {
+            const regex = new RegExp(RegExp.escape(query), 'i');
+            const allFolders = getFolderStructure();
+            const allClocks = Object.values(await getAllClocks());
 
-                // Then search for clocks, either by name or found in previously selected folders
-                allClocks
-                    .filter(c => regex.test(SearchFilter.cleanQuery(c.name)) || folderIds.has(c.folder))
-                    .forEach(c => {
-                        entryIds.add(c.id);
-                        includeFolder(c.folder);
-                    });
-            }
+            const includeFolder = (folder) => {
+                if (!folder) return;
+                if (typeof folder === 'string') folder = allFolders.get(folder);
+                if (!folder) return;
+                folderIds.add(folder.id);
+                if (folder.folder)
+                    includeFolder(folder);
+            };
 
-            // Hide / show entries in the list
-            html.find('li').not('.hidden').each((_, el) => {
-                if (el.classList.contains('folder')) {
-                    let match = query && folderIds.has(el.dataset.folderId);
-                    el.style.display = (!query || match) ? 'flex' : 'none';
-                    if (query && match)
-                        el.classList.remove('collapsed');
-                    else
-                        el.classList.toggle('collapsed', !this._expandedFolders[el.dataset.folderId]);
-                }
+            // First search folders by name
+            allFolders
+                .filter(f => regex.test(SearchFilter.cleanQuery(f.name)))
+                .forEach(includeFolder);
+
+            // Then search for clocks, either by name or found in previously selected folders
+            allClocks
+                .filter(c => regex.test(SearchFilter.cleanQuery(c.name)) || folderIds.has(c.folder))
+                .forEach(c => {
+                    entryIds.add(c.id);
+                    includeFolder(c.folder);
+                });
+        }
+
+        // Hide / show entries in the list
+        $(html).find('li').not('.hidden').each((_, el) => {
+            if (el.classList.contains('folder')) {
+                let match = query && folderIds.has(el.dataset.folderId);
+                el.style.display = (!query || match) ? 'flex' : 'none';
+                if (query && match)
+                    el.classList.add('expanded');
                 else
-                    el.style.display = (!query || entryIds.has(el.dataset.clockId)) ? 'flex' : 'none';
-            });
+                    el.classList.toggle('expaned', ClocksSidebarTab.#expandedFolders[el.dataset.folderId]);
+            }
+            else
+                el.style.display = (!query || entryIds.has(el.dataset.clockId)) ? 'flex' : 'none';
         });
 
-        // Context menu
-        ContextMenu.create(this, html, '.directory-item.folder .folder-header', this._getFolderContextOptions(), { hookName: 'FolderContext' });
-        ContextMenu.create(this, html, '.directory-item.clock', this._getEntryContextOptions());
     }
 
     _getFolderContextOptions() {
+        const getFolderId = header => $(header).closest('li').data('folderId');
         return [
             {
                 name: 'clock-works.sidebar.edit-folder',
                 icon: '<i class="fas fa-edit"></i>',
                 condition: () => game.user.isGM,
-                callback: header => new FolderForm(header.closest('li').data('folderId')).render(true),
+                callback: header => new FolderForm(getFolderId(header)).render(true),
             },
             {
                 name: 'OWNERSHIP.Configure',
                 icon: '<i class="fas fa-lock"></i>',
                 condition: () => game.user.isGM,
                 callback: header => {
-                    return new ClockPermissionForm(true, header.closest('li').data('folderId')).render(true);
+                    return new ClockPermissionForm(true, getFolderId(header)).render(true);
                 }
             },
             {
@@ -282,7 +290,7 @@ export class ClocksSidebarTab extends SidebarTab {
                 icon: '<i class="fas fa-dumpster"></i>',
                 condition: () => game.user.isGM,
                 callback: header => {
-                    const folder = getFolderStructure().get(header.closest('li').data('folderId'));
+                    const folder = getFolderStructure().get(getFolderId(header));
                     const subtreeIDs = getFolderSubtree(folder)
                         .map(f => f.id);
                     const clockIDs = Object.values(getAllClocks())
@@ -304,22 +312,23 @@ export class ClocksSidebarTab extends SidebarTab {
     }
 
     _getEntryContextOptions() {
+        const getClockId = li => $(li).data('clockId');
         return [
             {
                 name: 'clock-works.sidebar.show',
                 icon: '<i class="fas fa-eye"></i>',
                 condition: () => game.user.isGM,
                 callback: li => {
-                    const clockId = li.data('clockId');
+                    const clockId = getClockId(li);
                     return shockClockToAll(clockId);
                 }
             },
             {
                 name: 'clock-works.sidebar.edit',
                 icon: '<i class="fas fa-edit"></i>',
-                condition: li => checkClockPermission(li.data('clockId'), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
+                condition: li => checkClockPermission(getClockId(li), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
                 callback: li => {
-                    const clockId = li.data('clockId');
+                    const clockId = getClockId(li);
                     return ClockEditForm.open(clockId);
                 }
             },
@@ -328,16 +337,16 @@ export class ClocksSidebarTab extends SidebarTab {
                 icon: '<i class="fas fa-lock"></i>',
                 condition: () => game.user.isGM,
                 callback: li => {
-                    const clockId = li.data('clockId');
+                    const clockId = getClockId(li);
                     return new ClockPermissionForm(false, clockId).render(true);
                 }
             },
             {
                 name: 'clock-works.sidebar.duplicate',
                 icon: '<i class="fas fa-copy"></i>',
-                condition: li => checkClockPermission(li.data('clockId'), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
+                condition: li => checkClockPermission(getClockId(li), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
                 callback: li => {
-                    const clockId = li.data('clockId');
+                    const clockId = getClockId(li);
                     const original = getClock(clockId);
                     const newId = generateClockId();
                     return setClock(newId, foundry.utils.mergeObject(
@@ -350,9 +359,9 @@ export class ClocksSidebarTab extends SidebarTab {
             {
                 name: 'clock-works.sidebar.delete',
                 icon: '<i class="fas fa-trash"></i>',
-                condition: li => checkClockPermission(li.data('clockId'), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
+                condition: li => checkClockPermission(getClockId(li), CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
                 callback: li => {
-                    const clockId = li.data('clockId');
+                    const clockId = getClockId(li);
                     return deleteClock(clockId);
                 }
             }
@@ -403,7 +412,7 @@ export class ClocksSidebarTab extends SidebarTab {
         if (isRelative) {
             const targetFolder = allFolders.get(target.dataset.folderId);
             // Sort relative to a collapsed Folder
-            if (target.classList.contains('collapsed')) {
+            if (!target.classList.contains('expanded')) {
                 sortData.target = targetFolder;
                 sortData.parentId = targetFolder.folder;
             }
@@ -416,7 +425,7 @@ export class ClocksSidebarTab extends SidebarTab {
         // Sort relative to existing Folder contents
         else {
             sortData.parentId = closestFolderId;
-            sortData.target = closestFolder && closestFolder.classList.contains('collapsed') ? closestFolder : null;
+            sortData.target = closestFolder && !closestFolder.classList.contains('expanded') ? closestFolder : null;
         }
 
         if (sortData.parentId) {
@@ -493,10 +502,17 @@ export class ClocksSidebarTab extends SidebarTab {
         ));
     }
 
-    /** @inheritDoc */
-    async _render(force, options) {
-        const ret = await super._render(force, options);
-        $(this._element).find('li.clock').each(renderClockImage);
-        return ret;
+    _onDragHighlight(event) {
+        event.stopPropagation();
+        if (event.type === "dragenter") {
+            for (const el of this.element.querySelectorAll(".droptarget")) el.classList.remove("droptarget");
+        }
+        else if (event.type === "dragleave") {
+            // Look up the hovered element (event.target is the element that was left)
+            const el = document.elementFromPoint(event.clientX, event.clientY);
+            const parent = el.closest(".folder");
+            if (parent === event.currentTarget) return;
+        }
+        event.currentTarget.classList.toggle("droptarget", event.type === "dragenter");
     }
 }

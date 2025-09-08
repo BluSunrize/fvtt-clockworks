@@ -1,0 +1,38 @@
+<section class="tab sidebar-tab directory flexcol clocks-sidebar" id="clocks" data-tab="clocks">
+    <header class="directory-header">
+        <div class="header-actions action-buttons flexrow">
+            <button class="create-clock" data-action="createClock">
+                <span class="fa-stack" style="font-size: 125%; width: 1.5em; height: 1.5em; line-height: 1.25em;">
+                    <i class="far fa-circle fa-stack-1x"></i>
+                    <i class="far fa-asterisk fa-stack-1x"></i>
+                </span>
+                {{localize "clock-works.sidebar.create"}}
+            </button>
+            {{#if @root.canCreateFolder}}
+            <button class="create-folder" data-action="createFolder">
+                <i class="fas fa-folder"></i>
+                {{localize "clock-works.sidebar.create-folder"}}
+            </button>
+            {{/if}}
+        </div>
+        <search class="header-search">
+            <button class="inline-control icon fas fa-search disabled"></button>
+            <input type="search" name="search" value="" placeholder="Search Clocks" autocomplete="off">
+            <button class="inline-control toggle-sort icon fas {{sortIcon}}" data-action="toggleSort"
+                aria-label="{{localize sortTooltip}}" role="button" data-tooltip="{{localize sortTooltip}}"></button>
+            <button class="inline-control collapse-all icon fa-duotone fa-folder-tree" data-action="collapseFolders"
+                aria-label="{{localize 'FOLDER.Collapse'}}" role="button" data-tooltip="FOLDER.Collapse"></button>
+        </search>
+    </header>
+
+    <ol class="directory-list plain">
+        {{~#each tree.children}}
+        {{> "modules/clock-works/templates/partials/folder-partial.hbs" node=this folder=this.folder}}
+        {{/each}}
+        {{#each tree.entries}}
+        {{> "modules/clock-works/templates/partials/clock-partial.hbs"}}
+        {{/each~}}
+    </ol>
+
+    <footer class="directory-footer action-buttons"></footer>
+</section>
