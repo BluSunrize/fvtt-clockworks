@@ -1,63 +1,71 @@
 import { generateClockId, getAllClocks, getClock, setClock } from './settings.js';
 
-export class ClockEditForm extends FormApplication {
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+export class ClockEditForm extends HandlebarsApplicationMixin(ApplicationV2) {
     constructor(clockId) {
         super();
         this.clockId = clockId;
     }
 
-    static get defaultOptions() {
-        const defaults = super.defaultOptions;
-
-        const overrides = {
-            height: 'auto',
-            width: '400px',
-            id: 'clock-works-edit-form',
-            template: '/modules/clock-works/templates/edit.html',
-            title: game.i18n.localize('clock-works.edit-form.title'),
-            userId: game.userId,
+    /** @inheritDoc */
+    static DEFAULT_OPTIONS = {
+        tag: 'form',
+        id: 'clock-works-edit-form',
+        classes: ['clock-works', 'ownership'],
+        template: 'modules/clock-works/templates/edit.hbs',
+        window: {
+            title: 'clock-works.edit-form.title',
+            contentClasses: ['clock-works-edit-form', 'standard-form'],
+            icon: "fa-solid fa-file-lock"
+        },
+        position: { width: 400 },
+        form: {
+            handler: ClockEditForm._onSubmit,
             closeOnSubmit: true
-        };
+        },
+        sheetConfig: false
+    };
 
-        const mergedOptions = foundry.utils.mergeObject(defaults, overrides);
-
-        return mergedOptions;
-    }
-
-    getData(options) {
-        if (this.clockId) {
-            return getClock(this.clockId);
-        } else {
-            return defaultClockValues();
+    /** @override */
+    static PARTS = {
+        edit: {
+            template: 'modules/clock-works/templates/edit.hbs',
+            root: true,
+            scrollable: ['menu.scrollable']
+        },
+        footer: {
+            template: 'templates/generic/form-footer.hbs'
         }
-    }
+    };
 
-    static init() {
-        this.form = new ClockEditForm();
+    /** @override */
+    async _prepareContext(options) {
+        const context = await super._prepareContext(options);
+        const clockData = this.clockId ? getClock(this.clockId) : defaultClockValues();
+        return Object.assign(context, {
+            ...clockData,
+            colorPickerField: new game.colorPicker.ColorPickerField(),
+            buttons: [{ type: "submit", icon: "fa-solid fa-floppy-disk", label: "clock-works.edit-form.save" }]
+        });
     }
 
     static async open(clockId) {
-        ClockEditForm.form.clockId = clockId;
-        ClockEditForm.form.render(true, { width: '400px', height: 'auto' });
+        return new ClockEditForm(clockId).render(true);
     }
 
-    activateListeners(html) {
-        super.activateListeners(html);
-        ColorPicker.install();
-    }
-
-    async _updateObject(event, formData) {
-        const clockId = event.currentTarget.dataset.clockId;
+    static async _onSubmit(_event, _form, formData) {
+        const clockId = this.clockId;
         const existing = getClock(clockId);
         let newValue;
         if (existing) {
-            newValue = foundry.utils.mergeObject(existing, formData);
+            newValue = foundry.utils.mergeObject(existing, formData.object);
         } else {
-            const name = formData.name ?? game.i18n.localize('clock-works.edit-form.default-name');
+            const name = formData.object.name ?? game.i18n.localize('clock-works.edit-form.default-name');
             const persist = true;
             const id = clockId;
             const listPosition = (getAllClocks().length || 0) + 1;
-            newValue = foundry.utils.mergeObject(formData, { id, listPosition, persist, name });
+            newValue = foundry.utils.mergeObject(formData.object, { id, listPosition, persist, name });
         }
         await setClock(clockId, newValue);
     }

@@ -48,7 +48,6 @@ Hooks.once('init', async () => {
         'modules/clock-works/templates/partials/folder-partial.hbs',
     ]);
 
-    ClockEditForm.init();
     ClocksSidebarTab.init();
 });
 
