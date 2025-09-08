@@ -34,17 +34,20 @@
     }
 }
 
-.clock-works-display.window-app {
+.clock-works-display.application {
     background: unset;
     box-shadow: unset;
 
-    .window-content {
-        background: transparent;
-        padding: 0;
-        margin: 0;
-        overflow: hidden;
-        border-radius: 0 0 5px 5px;
-        display: block;
+    &:hover {
+        border-color: var(--color-border);
+        transition: border-color 0.2s ease-in;
+        transition-delay: 0.5s;
+    }
+
+    &:not(:hover) {
+        border-color: transparent;
+        transition: border-color 0.2s ease-in;
+        transition-delay: 0.1s;
     }
 
     .window-header {
@@ -64,5 +67,16 @@
         visibility: hidden;
         transition: visibility 0.2s ease-in;
         transition-delay: 0.1s;
+    }
+
+    .window-content {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        border-radius: 0 0 5px 5px;
+        display: block;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
     }
 }
