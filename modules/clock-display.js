@@ -1,39 +1,52 @@
 import { defaultClockValues } from './clock-edit.js';
 import { getClock } from './settings.js';
 
-export class ClockDisplay extends Application {
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+export class ClockDisplay extends HandlebarsApplicationMixin(ApplicationV2) {
     constructor(clockId) {
         super({
             id: `${clockId}`,
-            title: getClock(clockId).name,
         });
         this.clockId = clockId;
     }
 
-    static get defaultOptions() {
-        return foundry.utils.mergeObject(super.defaultOptions, {
-            classes: ['clock-works-display'],
-            height: 'auto',
-            width: '200px',
-            template: '/modules/clock-works/templates/display.html',
-            userId: game.userId,
-            closeOnSubmit: true
-        });
+    /** @inheritDoc */
+    static DEFAULT_OPTIONS = {
+        classes: ['clock-works-display'],
+        template: 'modules/clock-works/templates/display.hbs',
+        window: {
+            contentClasses: ['clock-works-edit-form', 'standard-form'],
+        },
+        position: { width: 200 },
+        form: {
+        },
+        sheetConfig: false
+    };
+
+    /** @override */
+    static PARTS = {
+        display: {
+            template: 'modules/clock-works/templates/display.hbs',
+            root: true,
+        }
+    };
+
+    /** @override */
+    get title() {
+        return getClock(this.clockId).name;
     }
 
-    getData(options) {
-        if (this.clockId) {
-            return getClock(this.clockId);
-        } else {
-            return defaultClockValues();
-        }
+    /** @override */
+    async _prepareContext(options) {
+        const context = await super._prepareContext(options)
+        const clockData = this.clockId ? getClock(this.clockId) : defaultClockValues();
+        return Object.assign(context, clockData);
     }
 
     /** @inheritDoc */
-    async _render(force, options) {
-        const ret = await super._render(force, options);
-        $(this._element).find('div').each(renderClockImage);
-        return ret;
+    _onRender(context, options) {
+        renderClockImage.apply(this.element.querySelector('div'));
     }
 }
 
