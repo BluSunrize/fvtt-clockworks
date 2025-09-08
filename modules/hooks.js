@@ -1,4 +1,5 @@
 import { ClockEditForm } from './clock-edit.js';
+import { FolderForm } from './folders.js';
 import { ClocksSidebarTab } from './sidebar.js';
 
 Hooks.once('init', async () => {
@@ -58,7 +59,10 @@ Hooks.once('ready', async () => {
     };
 });
 
-Hooks.on('renderSidebar', (_app, html) => {
-    ClocksSidebarTab.addSidebarElements();
+Hooks.on("i18nInit", () => {
+    // translate fields for folders
+    Object.values(FolderForm.FIELDS).forEach(field => {
+        if (field.label)
+            field.label = game.i18n.localize(field.label);
+    });
 });
-
