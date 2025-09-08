@@ -1,6 +1,7 @@
 import { ClockEditForm } from './clock-edit.js';
 import { FolderForm } from './folders.js';
 import { ClocksSidebarTab } from './sidebar.js';
+import { getAllClocks, deleteClock, shockClockToAll } from './settings.js';
 
 Hooks.once('init', async () => {
 
@@ -54,7 +55,10 @@ Hooks.once('init', async () => {
 
 Hooks.once('ready', async () => {
     window.ClockWorks = {
-        edit: ClockEditForm.open
+        edit: ClockEditForm.open,
+        list: getAllClocks,
+        delete: deleteClock,
+        show: shockClockToAll,
     };
 });
 
