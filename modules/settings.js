@@ -64,7 +64,7 @@ function updateRender() {
 
 function showClock(clockId) {
     // if window exists already, ignore
-    if(Object.values(foundry.applications.instances).get(`clock-works-${clockId}`))
+    if(foundry.applications.instances.get(`clock-works-${clockId}`))
         return;
     // show clock to all players
     const display = new ClockDisplay(clockId);
