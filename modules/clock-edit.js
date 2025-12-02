@@ -77,9 +77,9 @@ export function defaultClockValues() {
         name: game.i18n.localize('clock-works.edit-form.default-name'),
         size: 4,
         filled: 0,
-        colorempty: '#808080',
-        colorfilled: '#00ff22',
-        colorframe: '#444',
+        colorempty: game.settings.get('clock-works', 'defaultColorEmpty'),
+        colorfilled: game.settings.get('clock-works', 'defaultColorFilled'),
+        colorframe: game.settings.get('clock-works', 'defaultColorFrame'),
         imagebg: '',
         imagefg: '',
         ownership: {

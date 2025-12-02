@@ -43,6 +43,31 @@ Hooks.once('init', async () => {
         ),
     });
 
+    game.settings.register('clock-works', 'defaultColorEmpty', {
+        name: 'clock-works.settings.default-color-empty.name',
+        hint: 'clock-works.settings.default-color-empty.hint',
+        scope: 'world',
+        config: true,
+        type: new game.colorPicker.ColorPickerField({alphaChannel: true, format: 'hexa'}),
+        default: '#808080ff',
+    });
+    game.settings.register('clock-works', 'defaultColorFilled', {
+        name: 'clock-works.settings.default-color-filled.name',
+        hint: 'clock-works.settings.default-color-filled.hint',
+        scope: 'world',
+        config: true,
+        type: new game.colorPicker.ColorPickerField({alphaChannel: true, format: 'hexa'}),
+        default: '#00ff22ff',
+    });
+    game.settings.register('clock-works', 'defaultColorFrame', {
+        name: 'clock-works.settings.default-color-frame.name',
+        hint: 'clock-works.settings.default-color-frame.hint',
+        scope: 'world',
+        config: true,
+        type: new game.colorPicker.ColorPickerField({alphaChannel: true, format: 'hexa'}),
+        default: '#444444ff',
+    });
+
 
     loadTemplates([
         'modules/clock-works/templates/partials/clock-partial.hbs',
