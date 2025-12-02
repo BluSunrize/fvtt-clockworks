@@ -56,7 +56,7 @@ export async function shockClockToAll(clockId) {
 function updateRender() {
     // re-render sidebar and any opened clock displays
     ui.clocks.render();
-    Object.values(ui.windows).forEach(app => {
+    foundry.applications.instances.forEach(app => {
         if(app instanceof ClockDisplay)
             app.render();
     });
@@ -64,7 +64,7 @@ function updateRender() {
 
 function showClock(clockId) {
     // if window exists already, ignore
-    if(Object.values(ui.windows).find(app => app instanceof ClockDisplay && app.id == clockId))
+    if(Object.values(foundry.applications.instances).get(`clock-works-${clockId}`))
         return;
     // show clock to all players
     const display = new ClockDisplay(clockId);
