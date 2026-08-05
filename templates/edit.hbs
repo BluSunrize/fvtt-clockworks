@@ -13,15 +13,15 @@
 <div class="form-group" data-tooltip="clock-works.edit-form.fields.imagebg-tooltip">
     <label for="backgroundImage">{{localize "clock-works.edit-form.fields.imagebg"}}:</label>
     <div class="form-fields">
-        <input type="text" id="imagebg" name="imagebg" data-dtype="text" value="{{imagebg}}">
-        {{filePicker target="imagebg" type="image"}}
+        <file-picker type="image" name="imagebg" value="{{imagebg}}">
+        </file-picker>
     </div>
 </div>
 <div class="form-group" data-tooltip="clock-works.edit-form.fields.imagefg-tooltip">
-    <label for="backgroundImage">{{localize "clock-works.edit-form.fields.imagefg"}}:</label>
+    <label for="foregroundImage">{{localize "clock-works.edit-form.fields.imagefg"}}:</label>
     <div class="form-fields">
-        <input type="text" id="imagefg" name="imagefg" data-dtype="text" value="{{imagefg}}">
-        {{filePicker target="imagefg" type="image"}}
+        <file-picker type="image" name="imagefg" value="{{imagefg}}">
+        </file-picker>
     </div>
 </div>
 <div class="form-group" data-tooltip="clock-works.edit-form.fields.colorempty-tooltip">

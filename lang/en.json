@@ -28,7 +28,7 @@
             "size": "Size",
             "size-tooltip": "Total number of segments on the clock",
             "filled": "Filled segments",
-            "filled-tooltip": "Numer of filled segments on the clock",
+            "filled-tooltip": "Number of filled segments on the clock",
             "imagebg": "Background image",
             "imagebg-tooltip": "Background image of the clock",
             "imagefg": "Foreground image",
